@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Broadcast Studio · Stat Keeper</title>
+<link rel="stylesheet" href="/studio.css">
+<link rel="stylesheet" href="/stats.css">
+<script type="module" src="/js/stats.js"></script>
+</head>
+<body>
+<header class="top">
+  <div class="brand"><div class="mark" aria-hidden="true"><i></i><i></i><i></i></div><div><h1>Stat Keeper</h1><small>BROADCAST STUDIO</small></div></div>
+  <div class="row">
+    <span id="connection" class="connection" role="status">Connecting</span>
+    <span id="syncChip" class="onair">—</span>
+    <a href="/control" target="_blank" rel="noopener">Control panel ↗</a>
+  </div>
+</header>
+<div id="startupError" class="login card" hidden></div>
+<main id="app" hidden>
+  <div class="scorebar">
+    <div class="segmented" id="sportPicker" role="group" aria-label="Sport"><button type="button" data-sport="football">Football</button><button type="button" data-sport="basketball">Basketball</button></div>
+    <div class="scoreline"><span class="tn" id="sbName0"></span><span class="readout" id="sbScore0">0</span><span class="dash">–</span><span class="readout" id="sbScore1">0</span><span class="tn" id="sbName1"></span></div>
+    <div class="row"><span class="timeBox" id="timeBox"></span><select id="ownPeriod" aria-label="Period" hidden></select></div>
+    <div class="row">
+      <label class="check" title="Send the score (and basketball team fouls) to the scorebug after every play"><input type="checkbox" id="autoSend"> Send score to scorebug</label>
+      <button type="button" id="undo">↶ Undo</button>
+    </div>
+  </div>
+  <div id="mismatch" class="mismatch" hidden><span id="mismatchText"></span><button type="button" id="setBug">Set scorebug to stats</button><button type="button" id="switchBug" hidden>Switch scorebug sport</button></div>
+  <nav class="tabs"><button data-tab="live" aria-current="page">Live</button><button data-tab="rosters">Rosters</button><button data-tab="box">Box score</button><button data-tab="pbp">Play-by-play</button></nav>
+
+  <section id="tab-live">
+    <div class="liveGrid">
+      <div class="side" id="side0"></div>
+      <div class="pad">
+        <div class="selected" id="selected">Tap a player, then an action</div>
+        <div class="actions" id="actions"></div>
+        <div class="recent" id="recent"></div>
+      </div>
+      <div class="side" id="side1"></div>
+    </div>
+  </section>
+
+  <section id="tab-rosters" hidden>
+    <div class="grid2" id="rosterEditors"></div>
+    <section class="card"><header><h2>Stat game</h2></header>
+      <p class="hint">Starting a new stat game clears every play. Rosters stay. Download a backup first if you want to keep this game.</p>
+      <div class="row"><button type="button" id="backup">Download backup (JSON)</button><label class="ghost" style="cursor:pointer">Restore backup…<input type="file" id="restore" accept="application/json" hidden></label><button type="button" class="danger" id="newStatGame">Start new stat game…</button></div>
+    </section>
+  </section>
+
+  <section id="tab-box" hidden>
+    <div class="row" style="margin-bottom:12px"><button type="button" id="exportCsv">Export CSV</button><button type="button" id="print">Print / save PDF</button><button type="button" class="primary" id="compareLive">Put team stats on air</button></div>
+    <div id="boxScore"></div>
+  </section>
+
+  <section id="tab-pbp" hidden>
+    <section class="card"><header><h2>Play-by-play</h2><span class="muted">Deleting a play recalculates every total</span></header><div id="pbp"></div></section>
+  </section>
+</main>
+<dialog id="playDialog"><form method="dialog" id="playForm"><h2 id="playTitle"></h2><div id="playFields" class="stack"></div><div class="row"><button value="cancel" formnovalidate>Cancel</button><button value="ok" class="primary" id="playSave">Save play</button></div></form></dialog>
+<dialog id="confirmDialog"><form method="dialog"><h2 id="confirmTitle"></h2><p class="muted" id="confirmText"></p><div class="row"><button value="cancel">Cancel</button><button value="ok" class="danger" id="confirmOk">OK</button></div></form></dialog>
+</body>
+</html>

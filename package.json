@@ -1,0 +1,12 @@
+{
+  "name": "broadcast-studio",
+  "private": true,
+  "type": "module",
+  "engines": { "node": "22.x" },
+  "scripts": {
+    "local": "node server.js",
+    "test": "node --test test/*.test.js"
+  },
+  "dependencies": { "@neondatabase/serverless": "^1.0.2" },
+  "devDependencies": { "@fontsource/barlow-condensed": "^5.3.0", "pg": "^8.16.0" }
+}

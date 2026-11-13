@@ -1,0 +1,261 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Broadcast Studio · Control</title>
+<link rel="stylesheet" href="/studio.css">
+<link rel="stylesheet" href="/control.css">
+<script type="module" src="/js/control.js"></script>
+</head>
+<body>
+<header class="top">
+  <div class="brand"><div class="mark" aria-hidden="true"><i></i><i></i><i></i></div><div><h1>Broadcast Studio</h1><small>CONTROL PANEL</small></div></div>
+  <div class="row">
+    <span id="connection" class="connection" role="status">Connecting</span>
+    <span id="serialChip" class="onair" hidden>SCOREBOARD</span>
+    <a href="/stats" target="_blank" rel="noopener">Stat keeper ↗</a>
+    <button id="copyOverlayTop" type="button">Copy OBS URL</button>
+    <button id="signOut" type="button" class="ghost">Sign out</button>
+  </div>
+</header>
+<div id="startupError" class="login card" hidden></div>
+<main id="app" hidden>
+  <div class="bar between">
+    <div class="row">
+      <div class="segmented" id="sportPicker" role="group" aria-label="Sport">
+        <button type="button" data-sport="football">Football</button><button type="button" data-sport="basketball">Basketball</button>
+      </div>
+      <button type="button" id="bugToggle" class="big">Scorebug</button>
+    </div>
+    <div class="row" id="statsSync" hidden><span class="muted" id="statsSyncText"></span><button id="statsSyncApply" type="button">Set scorebug to stats</button></div>
+  </div>
+  <nav class="tabs" aria-label="Sections">
+    <button data-tab="live" aria-current="page">Live</button><button data-tab="graphics">Graphics</button><button data-tab="ticker">Ticker</button><button data-tab="teams">Teams</button><button data-tab="style">Style</button><button data-tab="scoreboard">Scoreboard data</button>
+  </nav>
+  <div class="workspace">
+    <div class="editor">
+      <!-- LIVE -->
+      <section id="tab-live">
+        <div class="grid2" id="teamCards"></div>
+        <section class="card">
+          <header><h2>Clock</h2><div class="row"><label class="check"><input type="checkbox" id="showClock"> Show game clock</label><label class="check"><input type="checkbox" id="showAux"> Show&nbsp;<span class="auxName">play clock</span></label></div></header>
+          <div class="grid2">
+            <div class="sub">
+              <div class="between"><span class="label">Game clock</span><span class="muted" id="periodLength"></span></div>
+              <output class="readout" id="gameReadout">–:––</output>
+              <div class="row"><button class="primary big" id="gameToggle" type="button">Start</button><button id="gameReset" type="button">Reset</button></div>
+              <form class="inline" id="gameSet" style="margin-top:8px"><input id="gameInput" placeholder="MM:SS" inputmode="decimal" maxlength="7" aria-label="Set game clock" required><button>Set</button></form>
+            </div>
+            <div class="sub">
+              <div class="between"><span class="label auxName">Play clock</span><label class="check" id="linkAuxBox"><input type="checkbox" id="linkAux" checked> Stops with game clock</label></div>
+              <output class="readout" id="auxReadout">––</output>
+              <div class="row" id="auxButtons"></div>
+              <form class="inline" id="auxSet" style="margin-top:8px"><input id="auxInput" type="number" min="0" max="99" placeholder="Seconds" aria-label="Set aux clock" required><button>Set</button></form>
+            </div>
+          </div>
+        </section>
+        <section class="card">
+          <header><h2>Game situation</h2><button type="button" id="nextPeriod">Next period →</button></header>
+          <div class="grid3">
+            <label>Period<select id="periodSelect"></select></label>
+            <label id="possLabel" class="football">Possession<select id="possessionSelect"></select></label>
+            <label class="hoops">Possession arrow<select id="arrowSelect"></select></label>
+          </div>
+          <div class="football" style="margin-top:10px">
+            <div class="row" id="downButtons"></div>
+            <div class="grid3" style="margin-top:10px">
+              <form id="distanceForm"><label for="distanceInput">Yards to go</label><div class="inline" style="margin-top:4px"><input id="distanceInput" maxlength="4" placeholder="10 or Goal" required><button>Set</button></div></form>
+              <form id="ballOnForm"><label for="ballOnInput">Ball on (corner layout)</label><div class="inline" style="margin-top:4px"><input id="ballOnInput" maxlength="12" placeholder="WES 34"><button>Set</button></div></form>
+              <div><span class="label">Quick</span><div class="row" style="margin-top:4px"><button type="button" id="firstTen">1st &amp; 10</button><button type="button" id="goal">&amp; Goal</button></div></div>
+            </div>
+          </div>
+          <div style="margin-top:12px"><span class="label">Status (replaces down &amp; distance)</span><div class="row" id="statusButtons" style="margin-top:5px"></div></div>
+        </section>
+        <section class="card">
+          <header><h2>Banner</h2><span class="muted">Shows next to the scorebug</span></header>
+          <div class="row" id="bannerQuick"></div>
+          <form id="bannerForm" class="grid3" style="margin-top:10px;align-items:end">
+            <label style="grid-column:span 1">Message<input id="bannerText" maxlength="60" placeholder="TOUCHDOWN {TEAM}" required></label>
+            <label>Team color<select id="bannerSide"></select></label>
+            <div class="inline"><label style="flex:1">Seconds<input id="bannerSeconds" type="number" min="0" max="120" title="0 keeps it up until cleared"></label><button class="primary">Show</button><button type="button" id="bannerClear">Clear</button></div>
+          </form>
+        </section>
+      </section>
+
+      <!-- GRAPHICS -->
+      <section id="tab-graphics" hidden>
+        <section class="card" id="fromStats">
+          <header><h2>From the stat keeper</h2><span class="muted" id="statsInfo"></span></header>
+          <div class="grid3" style="align-items:end">
+            <label>Team<select id="statTeam"></select></label>
+            <label>Player<select id="statPlayer"></select></label>
+            <div class="row"><button type="button" id="loadPlayer">Load player card</button><button type="button" id="loadCompare">Load team stats</button></div>
+          </div>
+        </section>
+        <section class="card">
+          <header><h2>Graphic</h2><div class="segmented" id="graphicType"><button type="button" data-type="player">Player</button><button type="button" data-type="compare">Team compare</button><button type="button" data-type="message">Message / sponsor</button></div></header>
+          <form id="graphicForm" class="stack">
+            <div class="grid3">
+              <label>Label (small, above)<input id="gKicker" maxlength="40" placeholder="QUARTERBACK"></label>
+              <label><span id="gTitleLabel">Name</span><input id="gTitle" maxlength="70" required></label>
+              <label>Color<select id="gSide"></select></label>
+            </div>
+            <div class="grid3">
+              <label>Subtitle<input id="gSub" maxlength="100" placeholder="Senior · 6-2, 195"></label>
+              <label class="gPlayer">Jersey number<input id="gNumber" maxlength="3"></label>
+              <label class="gPlayer">Stat line<input id="gStat" maxlength="90" placeholder="14/21 · 212 YDS · 2 TD"></label>
+            </div>
+            <div class="grid2 gImageRow">
+              <label><span id="gImageLabel">Photo</span><input id="gImage" type="file" accept="image/png,image/jpeg,image/webp"></label>
+              <div class="row" style="align-self:end"><img id="gImagePreview" alt="" hidden><span class="muted" id="gImageStatus">No image</span><button type="button" class="ghost" id="gImageClear">Remove</button></div>
+            </div>
+            <fieldset id="gRowsBox"><legend>Rows</legend><div id="gRows"></div><button type="button" class="ghost" id="gAddRow">+ Add row</button></fieldset>
+            <div class="between">
+              <div class="row"><button class="primary big">Take graphic live</button><label class="check">Auto-clear after <input id="gSeconds" type="number" min="0" max="120" style="width:64px;display:inline-block"> sec</label></div>
+              <div class="row"><button type="button" id="gSave">Save preset</button><button type="button" class="danger" id="gClear">Clear on-air graphic</button></div>
+            </div>
+          </form>
+        </section>
+        <section class="card"><header><h2>Saved presets</h2></header><div id="presets" class="list"></div></section>
+      </section>
+
+      <!-- TICKER -->
+      <section id="tab-ticker" hidden>
+        <form id="tickerForm">
+          <section class="card">
+            <header><h2>Score ticker</h2><div class="row"><button type="button" id="tickerToggle" class="big">Ticker</button></div></header>
+            <div class="grid4">
+              <label>Layout<select id="tLayout"><option value="corner">Corner box</option><option value="bar">Bottom bar</option></select></label>
+              <label>Corner<select id="tCorner"><option value="top-left">Top left</option><option value="top-right">Top right</option><option value="bottom-left">Bottom left</option><option value="bottom-right">Bottom right</option></select></label>
+              <label>Title<input id="tTitle" maxlength="20"></label>
+              <label>Seconds per game<input id="tSeconds" type="number" min="2" max="30"></label>
+              <label>League label color<div class="inline"><input type="color" id="tAccent"></div></label>
+              <label>Winner color<div class="inline"><input type="color" id="tWinner"></div></label>
+              <label>Edge margin (px)<input id="tMargin" type="number" min="0" max="200"></label>
+              <label>Empty message<input id="tEmpty" maxlength="40"></label>
+            </div>
+            <div class="row" style="margin-top:10px">
+              <label class="check"><input type="checkbox" id="tLogos"> Logos</label>
+              <label class="check"><input type="checkbox" id="tRanks"> Rankings</label>
+              <label class="check"><input type="checkbox" id="tRecords"> Records</label>
+              <label class="check"><input type="checkbox" id="tUpcoming"> Upcoming games</label>
+              <label class="check"><input type="checkbox" id="tHideEmpty"> Hide when empty</label>
+              <label class="check"><input type="checkbox" id="tLive"> Include this game as</label><input id="tLiveLabel" maxlength="16" style="width:130px">
+            </div>
+          </section>
+          <section class="card">
+            <header><h2>Games entered here</h2><button type="button" id="tAddGame">+ Add game</button></header>
+            <p class="hint">Scores you type here go out on the next save. Leave scores blank before kickoff; put "Final" in status when it ends.</p>
+            <div class="scroll"><table id="tGames"><thead><tr><th>League</th><th>Away</th><th class="n">Pts</th><th>Home</th><th class="n">Pts</th><th>Status</th><th>Show</th><th></th></tr></thead><tbody></tbody></table></div>
+          </section>
+          <section class="card">
+            <header><h2>Google Sheets</h2><button type="button" id="tAddSheet">+ Add sheet</button></header>
+            <p class="hint">Same template as the original ticker (league, away, away_score, home, home_score, status…). Share the sheet as "Anyone with the link: Viewer".</p>
+            <div id="tSheets" class="stack"></div>
+          </section>
+          <section class="card">
+            <header><h2>ESPN scores</h2></header>
+            <div class="row" id="tLeagues"></div>
+            <label style="margin-top:10px">Only these teams (comma separated, blank = all)<input id="tTeams" placeholder="Alabama, Auburn, UAB"></label>
+          </section>
+          <div class="row" style="justify-content:flex-end;margin-bottom:16px"><span class="muted" id="tickerDirty"></span><button class="primary big">Save ticker</button></div>
+        </form>
+      </section>
+
+      <!-- TEAMS -->
+      <section id="tab-teams" hidden>
+        <section class="card">
+          <header><h2>Teams on the scorebug</h2><button type="button" id="swapTeams">⇄ Swap sides</button></header>
+          <form id="teamForm"><div class="grid2" id="teamEditors"></div><div class="row" style="margin-top:12px"><button class="primary">Apply teams</button></div></form>
+        </section>
+        <section class="card"><header><h2>Team library</h2><span class="muted">Saved for next time</span></header><div id="teamLibrary" class="list"></div></section>
+      </section>
+
+      <!-- STYLE -->
+      <section id="tab-style" hidden>
+        <form id="styleForm">
+          <section class="card">
+            <header><h2>Scorebug look</h2></header>
+            <div class="grid4">
+              <label>Layout<select id="sLayout"><option value="broadcast">Broadcast bar</option><option value="corner">Corner box</option></select></label>
+              <label>Position<select id="sPosition"><option value="bottom-center">Bottom center</option><option value="bottom-left">Bottom left</option><option value="bottom-right">Bottom right</option><option value="top-left">Top left</option><option value="top-center">Top center</option><option value="top-right">Top right</option></select></label>
+              <label>Size (%)<input id="sScale" type="number" min="40" max="200"></label>
+              <label>Team names<select id="sNames"><option value="name">Full name</option><option value="short">Abbreviation</option></select></label>
+              <label>Nudge right (px)<input id="sNudgeX" type="number" min="-1920" max="1920"></label>
+              <label>Nudge up (px)<input id="sNudgeY" type="number" min="-1080" max="1080"></label>
+              <label>Graphic placement<select id="sGraphic"><option value="auto">Automatic</option><option value="stack">Attached to scorebug</option><option value="lower-left">Lower third, left</option><option value="lower-center">Lower third, center</option></select></label>
+              <label>Banner seconds<input id="sBanner" type="number" min="0" max="120"></label>
+              <label>Scorebug base color<div class="inline"><input type="color" id="sDark"></div></label>
+              <label>Studio accent<div class="inline"><input type="color" id="sAccent"></div></label>
+            </div>
+            <div class="row" style="margin-top:10px"><label class="check"><input type="checkbox" id="sRank"> Show rankings</label><label class="check"><input type="checkbox" id="sRecords"> Show records</label></div>
+          </section>
+          <section class="card">
+            <header><h2>Game rules</h2></header>
+            <div class="grid4">
+              <label>Football quarter (min)<input id="fMinutes" type="number" min="1" max="30"></label>
+              <label>Football timeouts / half<input id="fTimeouts" type="number" min="0" max="9"></label>
+              <label>Play clock (sec)<input id="fPlay" type="number" min="5" max="99"></label>
+              <span></span>
+              <label>Basketball period (min)<input id="bMinutes" type="number" min="1" max="30"></label>
+              <label>Basketball overtime (min)<input id="bOT" type="number" min="1" max="10"></label>
+              <label>Basketball timeouts / game<input id="bTimeouts" type="number" min="0" max="9"></label>
+              <label>Shot clock (sec)<input id="bShot" type="number" min="5" max="99"></label>
+              <label>Bonus at team foul #<input id="bBonus" type="number" min="1" max="20"></label>
+            </div>
+          </section>
+          <div class="row" style="justify-content:space-between;margin-bottom:12px"><button type="button" class="danger" id="newGame">Start new game…</button><button class="primary big">Save style &amp; rules</button></div>
+        </form>
+        <section class="card">
+          <header><h2>OBS sources</h2></header>
+          <p class="hint">Add a Browser Source at 1920 × 1080 and leave "Shutdown source when not visible" unchecked. Use the full overlay, or split layers into separate sources to control them in OBS.</p>
+          <div id="obsLinks" class="list"></div>
+        </section>
+      </section>
+
+      <!-- SCOREBOARD -->
+      <section id="tab-scoreboard" hidden>
+        <section class="card">
+          <header><h2>Scoreboard controller (serial)</h2><span class="onair" id="serialState">NOT CONNECTED</span></header>
+          <p class="hint" id="serialSupport">Connect the press-box scoreboard controller's serial output to this computer with a USB-to-RS232 adapter, then pick the port. Works in Chrome or Edge on a laptop. Keep this tab open while it runs.</p>
+          <div class="grid4" style="align-items:end">
+            <label>Baud rate<select id="serBaud"><option>1200</option><option>2400</option><option>4800</option><option selected>9600</option><option>19200</option><option>38400</option><option>57600</option><option>115200</option></select></label>
+            <label>Frame start byte (hex, optional)<input id="serStart" placeholder="e.g. 02 or 16"></label>
+            <label>Frame end byte (hex, optional)<input id="serEnd" placeholder="e.g. 0D or 04"></label>
+            <label>Frame length (bytes, with start)<input id="serLength" type="number" min="0" max="512" placeholder="0 = use end byte"></label>
+          </div>
+          <div class="row" style="margin-top:10px"><button class="primary" id="serConnect" type="button">Connect…</button><button id="serDisconnect" type="button" disabled>Disconnect</button><label class="check"><input type="checkbox" id="serApply"> Send to scorebug</label><span class="muted" id="serRate"></span></div>
+        </section>
+        <section class="card">
+          <header><h2>Last frame</h2><span class="muted">Bytes that changed in the last few seconds are highlighted. Run the clock on the controller to find it.</span></header>
+          <div id="serFrame" class="hex"></div>
+          <div id="serAscii" class="hexAscii"></div>
+        </section>
+        <section class="card">
+          <header><h2>Field mapping</h2><div class="row"><select id="serProfiles" aria-label="Saved mappings"></select><input id="serProfileName" placeholder="Mapping name" maxlength="40" style="width:150px"><button type="button" id="serLoad">Load</button><button type="button" id="serSaveProfile">Save mapping</button><button type="button" class="ghost" id="serExport">Export</button><label class="ghost" style="cursor:pointer">Import<input type="file" id="serImport" accept="application/json" hidden></label></div></header>
+          <p class="hint">Map each scoreboard value to a byte offset (0 = first byte of the frame). Only mapped fields are sent, and only when the controller changes them, so manual corrections stick until the next change.</p>
+          <div class="scroll"><table id="serMap"><thead><tr><th>Field</th><th>Offset</th><th>Length</th><th>Encoding</th><th>Decoded</th></tr></thead><tbody></tbody></table></div>
+        </section>
+      </section>
+    </div>
+
+    <aside>
+      <section class="card monitor">
+        <header><h2>Program monitor</h2><span class="onair" id="outputStatus">STANDBY</span></header>
+        <div class="monitorFrame"><iframe id="preview" title="Overlay preview" tabindex="-1"></iframe></div>
+        <div class="between" style="margin-top:10px"><span class="muted" id="monitorBug"></span><a id="openOverlay" target="_blank" rel="noopener">Open overlay ↗</a></div>
+        <div class="onAirLine"><div><span class="label">Graphic</span><strong id="graphicLive">None</strong></div><button type="button" id="monitorClearGraphic">Clear</button></div>
+        <div class="onAirLine"><div><span class="label">Banner</span><strong id="bannerLive">None</strong></div><button type="button" id="monitorClearBanner">Clear</button></div>
+        <div class="onAirLine"><div><span class="label">Ticker</span><strong id="tickerLive">Off</strong></div><button type="button" id="monitorTicker">Show</button></div>
+      </section>
+      <section class="card keys">
+        <header><h2>Keyboard</h2><label class="check"><input type="checkbox" id="keysOn"> Enable</label></header>
+        <div class="muted keyList"><span><kbd>Space</kbd> game clock</span><span><kbd>X</kbd> <span class="auxName">play clock</span></span><span><kbd>R</kbd> reset <span class="auxName">play clock</span></span><span><kbd>B</kbd> scorebug</span><span><kbd>Esc</kbd> clear graphic &amp; banner</span><span><kbd>1</kbd>/<kbd>2</kbd> +1 left/right</span></div>
+      </section>
+    </aside>
+  </div>
+</main>
+<dialog id="confirmDialog"><form method="dialog"><h2 id="confirmTitle"></h2><p class="muted" id="confirmText"></p><div class="row"><button value="cancel">Cancel</button><button value="ok" class="danger" id="confirmOk">OK</button></div></form></dialog>
+</body>
+</html>
