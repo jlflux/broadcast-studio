@@ -4,6 +4,7 @@ import {freshGame} from './defaults.js';
 import {LEAGUES} from './ticker-layer.js';
 import {boxScore, compareRows, score as statsScore, statLine} from './stats-engine.js';
 import {ENCODINGS, FIELDS, SerialReader, decodeRaw, interpret, parseHex} from './serial.js';
+import {roleOf} from './feed.js';
 
 // ── Documents ───────────────────────────────────────────────────────────────
 const liveDoc = new Doc('live', {onChange: () => render(), interval: 800});
@@ -13,6 +14,7 @@ const statsDoc = new Doc('stats', {onChange: () => renderStatsLinks(), interval:
 const L = () => liveDoc.doc;
 const G = () => L().games[L().sport];
 let overlayKey = '';
+let feedKey = '';
 
 const fail = error => toast(error.message || String(error), 'error');
 function change(fn, message) {
@@ -979,6 +981,47 @@ byId('serImport').onchange = async event => {
   event.target.value = '';
 };
 
+// ── Scoreboard camera feed (ScoreSight) ────────────────────────────────────
+const ROLE_LABELS = {
+  homeScore: 'Home score', awayScore: 'Away score', clock: 'Game clock', period: 'Period', aux: 'Play / shot clock',
+  homeFouls: 'Home fouls', awayFouls: 'Away fouls', homeTimeouts: 'Home timeouts', awayTimeouts: 'Away timeouts',
+  down: 'Down', distance: 'Yards to go', ballOn: 'Ball on', homePoss: 'Home possession', awayPoss: 'Away possession',
+};
+const FOOTBALL_ONLY = new Set(['down', 'distance', 'ballOn', 'homePoss', 'awayPoss']);
+const feedDefaults = () => ({enabled: false, homeSide: 1, last: {}, track: null, raw: {}, seenAt: 0});
+
+function renderFeed() {
+  const feed = {...feedDefaults(), ...(L().feed || {})};
+  byId('feedEnabled').checked = feed.enabled;
+  if (document.activeElement !== byId('feedHome')) byId('feedHome').value = String(feed.homeSide);
+  const age = feed.seenAt ? Math.round((serverNow() - feed.seenAt) / 1000) : null;
+  const live = age !== null && age < 10;
+  const state = byId('feedState');
+  state.textContent = !feed.seenAt ? 'NO DATA YET' : live ? (feed.enabled ? 'RECEIVING → BUG' : 'RECEIVING (not sending)') : 'NO RECENT DATA';
+  state.classList.toggle('active', live && feed.enabled);
+  setText('feedSeen', feed.seenAt ? `Last reading ${age < 2 ? 'just now' : age + 's ago'}` : '');
+  const rows = Object.entries(feed.raw || {});
+  const body = byId('feedValues').tBodies[0];
+  const key = JSON.stringify([rows, L().sport]);
+  if (body.dataset.key === key) return;
+  body.dataset.key = key;
+  body.innerHTML = rows.length ? rows.map(([name, text]) => {
+    const role = roleOf(name);
+    const target = !role ? '<span class="muted">Not used. Rename the box to match a field.</span>'
+      : FOOTBALL_ONLY.has(role) && L().sport !== 'football' ? `<span class="muted">${ROLE_LABELS[role]} (football only)</span>`
+      : (role === 'homeFouls' || role === 'awayFouls') && L().sport !== 'basketball' ? `<span class="muted">${ROLE_LABELS[role]} (basketball only)</span>`
+      : esc(ROLE_LABELS[role]);
+    return `<tr><td>${esc(name)}</td><td class="num">${esc(text)}</td><td>${target}</td></tr>`;
+  }).join('') : '<tr><td colspan="3" class="muted">Nothing received yet. Point ScoreSight at the feed URL.</td></tr>';
+}
+setInterval(() => { if (liveDoc.ready) renderFeed(); }, 1000);
+byId('feedEnabled').onchange = event => change(d => {
+  // Start fresh so every current reading is applied right away.
+  d.feed = {...feedDefaults(), ...(d.feed || {}), enabled: event.target.checked, last: {}, track: null};
+}, event.target.checked ? 'ScoreSight now drives the scorebug' : 'ScoreSight stopped sending to the scorebug');
+byId('feedHome').onchange = event => change(d => { d.feed = {...feedDefaults(), ...(d.feed || {}), homeSide: Number(event.target.value), last: {}}; });
+byId('feedCopy').onclick = () => copyText(byId('feedUrl').value, 'Feed URL');
+
 // ── Keyboard ────────────────────────────────────────────────────────────────
 byId('keysOn').checked = local.get('keys', false);
 byId('keysOn').onchange = event => local.set('keys', event.target.checked);
@@ -1002,6 +1045,7 @@ function render() {
   else options(byId('gSide'), sideOptions());
   if (!teamsDirty) renderTeamEditors();
   renderStatsLinks();
+  renderFeed();
   if (!byId('serMap').tBodies[0].children.length || byId('serMap').dataset.sport !== L().sport) {
     byId('serMap').dataset.sport = L().sport;
     renderSerial();
@@ -1021,6 +1065,8 @@ byId('signOut').onclick = signOut;
     const session = await getSession();
     if (!session) return;
     overlayKey = session.overlayKey;
+    feedKey = session.feedKey;
+    byId('feedUrl').value = new URL('/api/feed?key=' + feedKey, location.origin).href;
     await Promise.all([liveDoc.start(), tickerDoc.start(), libraryDoc.start(), statsDoc.start()]);
     if (!liveDoc.ready) throw new Error('Could not load the game. Check the database connection and reload.');
     byId('app').hidden = false;

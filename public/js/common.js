@@ -18,7 +18,9 @@ export function setText(target, value) {
 }
 
 export function remaining(clock, now) {
-  return Math.max(0, clock.end ? clock.end - now : clock.ms);
+  // `floor`: a running clock fed by a scoreboard never shows less than the
+  // scoreboard's last reading, even if readings stop arriving.
+  return Math.max(0, clock.end ? Math.max(clock.end - now, clock.floor || 0) : clock.ms);
 }
 export const running = (clock, now) => clock.end > now;
 

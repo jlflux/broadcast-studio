@@ -70,6 +70,7 @@
               <div><span class="label">Quick</span><div class="row" style="margin-top:4px"><button type="button" id="firstTen">1st &amp; 10</button><button type="button" id="goal">&amp; Goal</button></div></div>
             </div>
           </div>
+          <p class="muted football" style="margin-top:8px">Down &amp; distance shows on the bug only while a team has possession.</p>
           <div style="margin-top:12px"><span class="label">Status (replaces down &amp; distance)</span><div class="row" id="statusButtons" style="margin-top:5px"></div></div>
         </section>
         <section class="card">
@@ -216,6 +217,25 @@
 
       <!-- SCOREBOARD -->
       <section id="tab-scoreboard" hidden>
+        <section class="card" id="feedCard">
+          <header><h2>Scoreboard camera (ScoreSight)</h2><span class="onair" id="feedState">NO DATA YET</span></header>
+          <p class="hint">ScoreSight reads the scoreboard from a camera and sends the numbers here. No extra software and no serial cable, and it works with any scoreboard.</p>
+          <div class="grid3" style="align-items:end">
+            <label style="grid-column:span 2">Feed URL for ScoreSight<div class="inline" style="margin-top:4px"><input id="feedUrl" readonly><button type="button" id="feedCopy">Copy</button></div></label>
+            <label>Home team is on the<select id="feedHome"><option value="1">Right side of the bug</option><option value="0">Left side of the bug</option></select></label>
+          </div>
+          <div class="row" style="margin-top:10px"><label class="check"><input type="checkbox" id="feedEnabled"> Send ScoreSight readings to the scorebug</label><span class="muted" id="feedSeen"></span></div>
+          <details style="margin-top:10px"><summary class="muted" style="cursor:pointer">Set up ScoreSight</summary>
+            <ol class="muted" style="margin:8px 0 0;padding-left:20px;line-height:1.6">
+              <li>In ScoreSight, name your boxes the usual way: <b>Home Score</b>, <b>Away Score</b>, <b>Time</b>, <b>Period</b>, <b>Shot Clock</b>, <b>Home Fouls</b>, <b>Away Fouls</b>, <b>Home Timeouts</b>, <b>Away Timeouts</b>. For football you can add <b>Down</b>, <b>To Go</b>, <b>Ball On</b>, and <b>Home Possession</b> / <b>Away Possession</b>.</li>
+              <li>Open the <b>API</b> tab and check <b>Send out API requests to external services</b>.</li>
+              <li>Paste the feed URL above. Encoding: <b>JSON (Simple key-value)</b>. Method: <b>POST</b>.</li>
+              <li>Set the rate to <b>2 requests per second</b> and leave <b>Only changes</b> off, so the scorebug can tell when the clock stops.</li>
+              <li>Watch the table below fill in, then check <b>Send ScoreSight readings to the scorebug</b>.</li>
+            </ol>
+          </details>
+          <div class="scroll" style="margin-top:10px"><table id="feedValues"><thead><tr><th>ScoreSight box</th><th>Reading</th><th>Goes to</th></tr></thead><tbody></tbody></table></div>
+        </section>
         <section class="card">
           <header><h2>Scoreboard controller (serial)</h2><span class="onair" id="serialState">NOT CONNECTED</span></header>
           <p class="hint" id="serialSupport">Connect the press-box scoreboard controller's serial output to this computer with a USB-to-RS232 adapter, then pick the port. Works in Chrome or Edge on a laptop. Keep this tab open while it runs.</p>

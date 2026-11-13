@@ -29,7 +29,7 @@ if (!env.SCOREBUG_ADMIN_PASSWORD) {
   console.error('Set SCOREBUG_ADMIN_PASSWORD (20+ characters) before starting, e.g.\n  SCOREBUG_ADMIN_PASSWORD=my-long-password-here npm run local');
   process.exit(1);
 }
-const routes = Object.fromEntries(['doc', 'overlay', 'session'].map(route => [route, handler(route, env, () => store)]));
+const routes = Object.fromEntries(['doc', 'overlay', 'session', 'feed'].map(route => [route, handler(route, env, () => store)]));
 const rewrites = {'/': '/control.html', '/control': '/control.html', '/overlay': '/overlay.html', '/stats': '/stats.html', '/login': '/login.html'};
 const types = {'.html': 'text/html; charset=utf-8', '.js': 'text/javascript', '.mjs': 'text/javascript', '.css': 'text/css',
   '.png': 'image/png', '.jpg': 'image/jpeg', '.svg': 'image/svg+xml', '.woff2': 'font/woff2', '.json': 'application/json', '.txt': 'text/plain'};
@@ -43,7 +43,7 @@ async function body(request) {
 http.createServer(async (request, response) => {
   try {
     const url = new URL(request.url, `http://${request.headers.host}`);
-    const api = url.pathname.match(/^\/api\/(doc|overlay|session)$/);
+    const api = url.pathname.match(/^\/api\/(doc|overlay|session|feed)$/);
     if (api) {
       const result = await routes[api[1]].fetch(new Request(url, {
         method: request.method, headers: request.headers,

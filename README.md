@@ -18,9 +18,9 @@ It runs on Vercel with a Neon Postgres database (the same setup as the Homewood 
 
 **Graphics.** Player lower third (photo or jersey number, name, position, stat line), team stat comparison, and message/sponsor cards with an image. Save presets for one-click reuse. **Load player card** and **Load team stats** fill a graphic straight from the stat keeper, and the stat keeper's box score has an **On air** button on every player.
 
-**Ticker.** The `jlflux/ticker` score ticker, run from the panel instead of `config.js`. It reads Google Sheets (the same template, `ticker-sheet-template.csv`), ESPN scoreboards, games typed into the panel, and optionally the game on the scorebug. Corner box or bottom bar.
+**Ticker.** The `jlflux/ticker` score ticker, run from the panel instead of `config.js`. As a bottom bar it lifts the scorebug and lower thirds above it. It reads Google Sheets (the same template, `ticker-sheet-template.csv`), ESPN scoreboards, games typed into the panel, and optionally the game on the scorebug. Corner box or bottom bar.
 
-**Scoreboard data.** Reads the press-box scoreboard controller (FairPlay, Daktronics, etc.) over RS-232 through Chrome's Web Serial API: no local server or driver install beyond the USB-serial adapter. Map each value to a byte offset once (ASCII, BCD or binary). A live hex view highlights the bytes that change, and mappings can be saved and exported.
+**Scoreboard data.** Takes readings from a ScoreSight camera feed, or reads the press-box scoreboard controller (FairPlay, Daktronics, etc.) over RS-232 through Chrome's Web Serial API: no local server or driver install beyond the USB-serial adapter. Map each value to a byte offset once (ASCII, BCD or binary). A live hex view highlights the bytes that change, and mappings can be saved and exported.
 
 **Team library.** Save team names, colors and logos and load them onto either side. Rosters save to the library per sport too.
 
@@ -53,11 +53,22 @@ Open `http://localhost:3000/control`. Data is saved in `./data`. To let a tablet
 
 ## Game night notes
 
-- **One score source.** The stat keeper's **Send score to scorebug** and the scoreboard import can both write the score. Pick one, or turn off the stat keeper's auto-send when the scoreboard feed is running. If the stat keeper and the bug ever disagree, a yellow bar offers **Set scorebug to stats**.
+- **One score source.** The stat keeper's **Send score to scorebug**, ScoreSight and the serial import can all write the score. Pick one, or turn off the stat keeper's auto-send when the scoreboard feed is running. If the stat keeper and the bug ever disagree, a yellow bar offers **Set scorebug to stats**.
 - **Next period** advances the quarter and resets the game clock. Football also restores timeouts at the half; basketball also resets team fouls (NFHS quarter fouls) and the shot clock.
 - **Swap sides** flips teams, scores, timeouts, fouls and possession, and the stat keeper's teams and plays with them.
 - **Keyboard shortcuts** (turn on in the control panel): Space game clock, X play/shot clock, R reset play/shot clock, B scorebug, Esc clear graphic and banner, 1/2 add a point. Stat keeper: U undo, Esc deselect.
 - The stat keeper keeps a backup of the last cleared game in the browser, and **Download backup** saves the whole game as JSON.
+
+## Scoreboard camera (ScoreSight)
+
+[ScoreSight](https://github.com/locaal-ai/scoresight) reads the scoreboard from a camera with OCR. Its free version can POST its readings to a URL, and Broadcast Studio accepts them at `/api/feed`.
+
+1. In ScoreSight, name your boxes the standard way: **Home Score**, **Away Score**, **Time**, **Period**, **Shot Clock**, **Home Fouls**, **Away Fouls**, **Home Timeouts**, **Away Timeouts**. For football, **Down**, **To Go**, **Ball On** and **Home/Away Possession** also work. ScoreSight's other common names (Guest, Visitor, Clock, Quarter…) are recognized too.
+2. In the control panel, open **Scoreboard data** and copy the **Feed URL**.
+3. In ScoreSight's **API** tab, check **Send out API requests to external services** and paste the URL. Set Encoding to **JSON (Simple key-value)** (JSON (Full) works too) and Method to **POST**. Set the rate to **2 requests per second** and leave **Only changes** off.
+4. Check that the readings show up in the panel's table, set which side the home team is on, then turn on **Send ScoreSight readings to the scorebug**.
+
+The clock runs on its own while the readings count down and stops when they hold still. It never runs ahead of the last reading. Like the serial import, only values that change are applied, so a manual fix stays until the scoreboard changes. The feed URL contains a key that can change the score: keep it private. It changes if you change the password.
 
 ## Mapping a scoreboard controller
 

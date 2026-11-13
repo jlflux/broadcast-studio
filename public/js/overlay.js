@@ -148,14 +148,15 @@ function paintBug() {
 
   // Situation: football down & distance (or status); basketball status only.
   let situation = game.status;
-  if (!situation && sport === 'football' && game.down) {
+  // Down & distance only shows while a team has the ball.
+  if (!situation && sport === 'football' && game.down && game.possession >= 0) {
     const distance = /^goal$/i.test(game.distance) ? 'Goal' : game.distance;
     situation = `${['1st', '2nd', '3rd', '4th'][game.down - 1]} & ${distance}` + (game.ballOn && style.layout === 'corner' ? ` · ${game.ballOn}` : '');
   }
   const sit = byId('situation');
   setText(sit, situation);
   sit.classList.toggle('compact', situation.length > 13);
-  const sitColor = game.status === 'FLAG' ? '#c98a00' : game.status ? '#3a4656' : possession >= 0 ? teams[possession].color : '#2a3442';
+  const sitColor = game.status === 'FLAG' ? '#ffd400' : game.status ? '#3a4656' : possession >= 0 ? teams[possession].color : '#2a3442';
   sit.style.setProperty('--sit', sitColor);
   sit.style.setProperty('--sit-dark', shade(sitColor, 0.7));
   sit.style.setProperty('--sit-ink', readable(sitColor));
@@ -164,6 +165,10 @@ function paintBug() {
   byId('aux').hidden = !game.showAux;
   byId('aux').style.setProperty('--aux', possession >= 0 ? teams[possession].color : '#ffffff44');
   byId('clock').hidden = !game.showClock;
+
+  // A bottom-bar ticker sits under the bug and lower thirds, so lift them.
+  const tickerBar = tickerDoc?.visible && tickerDoc.layout !== 'corner';
+  canvas.style.setProperty('--tk-lift', tickerBar ? '72px' : '0px');
 
   // Position, scale and nudge.
   const stack = byId('stack');
