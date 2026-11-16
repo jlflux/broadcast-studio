@@ -77,7 +77,7 @@ function bugMarkup(layout) {
     return `${teamMarkup(0, layout)}${teamMarkup(1, layout)}<div class="foot">${timing}<span class="situation" id="situation"></span></div>`;
   }
   if (layout === 'badge') {
-    return `${teamMarkup(0, layout)}${teamMarkup(1, layout)}<div class="center" id="center"><div class="timing">${timing}</div><div class="situation" id="situation"></div></div>`;
+    return `${teamMarkup(0, layout)}${teamMarkup(1, layout)}<div class="center" id="center"><span class="parrow left" id="possLeft"></span><div class="timing">${timing}</div><div class="situation" id="situation"></div><span class="parrow right" id="possRight"></span></div>`;
   }
   if (layout === 'ribbon') {
     return `${teamMarkup(0, layout)}<div class="center" id="center"><div class="timing">${timing}</div><div class="situation" id="situation"></div></div>${teamMarkup(1, layout)}`;
@@ -111,6 +111,7 @@ function paintBug() {
   canvas.style.setProperty('--dark', style.dark);
   canvas.style.setProperty('--dark-hi', mix(style.dark, '#ffffff', 0.12));
   canvas.style.setProperty('--studio', style.accent);
+  canvas.style.setProperty('--poss', style.possColor || '#e3262f');
   const panel = style.panel || '#f2f4f7';
   canvas.style.setProperty('--panel', panel);
   canvas.style.setProperty('--panel-lo', shade(panel, 0.86));
@@ -161,6 +162,8 @@ function paintBug() {
     field(i, 'poss').classList.toggle('on', possession === i);
   });
   lastScores = [...game.score];
+  byId('possLeft')?.classList.toggle('on', possession === 0);
+  byId('possRight')?.classList.toggle('on', possession === 1);
 
   // Situation: football down & distance (or status); basketball status only.
   let situation = game.status;

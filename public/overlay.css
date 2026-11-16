@@ -61,8 +61,8 @@ html,body{width:100%;height:100%;margin:0;overflow:hidden;background:transparent
 .broadcast .meta{grid-row:3;grid-column:2;padding:4px 30px 0;align-self:start}
 .broadcast .right .meta{grid-column:1}
 .broadcast .fouls{font-size:18px}
-.broadcast .poss{top:50%;margin-top:-9px;right:-1px;border-right-color:var(--studio)}
-.broadcast .right .poss{right:auto;left:-1px;border-right-color:transparent;border-left-color:var(--studio)}
+.broadcast .poss{top:50%;margin-top:-9px;right:-1px;border-right-color:var(--poss)}
+.broadcast .right .poss{right:auto;left:-1px;border-right-color:transparent;border-left-color:var(--poss)}
 .broadcast .center{display:grid;grid-template-rows:52px 1fr;background:linear-gradient(#05080d 45%,var(--dark-hi,#1d2633))}
 .broadcast .center.nosit{grid-template-rows:1fr}
 .broadcast .situation{margin:5px 6px 0;border-radius:7px;display:grid;place-items:center;font-weight:800;font-size:34px;white-space:nowrap;overflow:hidden;text-transform:uppercase;background:linear-gradient(180deg,var(--sit,#2a3442),var(--sit-dark,#1d242e));color:var(--sit-ink,#fff)}
@@ -94,7 +94,7 @@ html,body{width:100%;height:100%;margin:0;overflow:hidden;background:transparent
 .corner .fouls{font-size:15px}
 .corner .bonus{font-size:13px}
 .corner .score{height:100%;display:grid;place-items:center;font-size:44px;background:#0004;color:#fff}
-.corner .poss{right:70px;top:50%;margin-top:-8px;border-width:8px;border-right-color:var(--studio)}
+.corner .poss{right:70px;top:50%;margin-top:-8px;border-width:8px;border-right-color:var(--poss)}
 .corner .foot{display:flex;align-items:center;height:40px;padding:0 12px;gap:12px;font-size:25px;background:linear-gradient(#0a0f16,var(--dark))}
 .corner .foot .period{text-transform:uppercase}
 .corner .foot .aux{font-size:20px;height:30px;min-width:40px}
@@ -130,7 +130,7 @@ html,body{width:100%;height:100%;margin:0;overflow:hidden;background:transparent
 .ribbon .score.wide{font-size:52px}
 .ribbon .left .score{clip-path:polygon(0 0,100% 0,calc(100% - 16px) 100%,0 100%);padding-right:12px}
 .ribbon .right .score{clip-path:polygon(0 0,100% 0,100% 100%,16px 100%);padding-left:12px}
-.ribbon .poss{bottom:0;top:auto;border:0;width:62px;height:5px;background:var(--studio);border-radius:3px 3px 0 0}
+.ribbon .poss{bottom:0;top:auto;border:0;width:62px;height:5px;background:var(--poss);border-radius:3px 3px 0 0}
 .ribbon .left .poss{right:30px}
 .ribbon .right .poss{left:30px}
 .ribbon .center{margin:0 -12px;position:relative;z-index:1;display:flex;flex-direction:column;justify-content:center;clip-path:polygon(16px 0,calc(100% - 16px) 0,100% 100%,0 100%);background:linear-gradient(180deg,var(--dark-hi,#1d2633),var(--dark))}
@@ -169,10 +169,12 @@ html,body{width:100%;height:100%;margin:0;overflow:hidden;background:transparent
 .badge .right .ticks{left:14px;right:88px}
 .badge .tick{height:6px;border-radius:0;opacity:.18}
 .badge .tick.ready{opacity:1}
-.badge .poss{top:12px;width:0;height:0;border:7px solid transparent;border-radius:0;background:none}
-.badge .left .poss{right:10px;border-right-color:var(--studio);border-right-width:9px;border-left-width:0}
-.badge .right .poss{left:10px;border-left-color:var(--studio);border-left-width:9px;border-right-width:0}
-.badge .center{position:absolute;left:50%;top:0;width:130px;height:84px;margin-left:-65px;border-radius:8px;z-index:2;display:flex;flex-direction:column;justify-content:center;gap:3px;padding:5px 10px;background:linear-gradient(180deg,var(--dark-hi,#1d2633),var(--dark));box-shadow:0 0 14px #0009}
+.badge .poss{display:none}
+.badge .parrow{position:absolute;top:50%;width:0;height:0;margin-top:-15px;border-top:15px solid transparent;border-bottom:15px solid transparent;opacity:0;transition:opacity .25s;filter:drop-shadow(0 0 4px #0008)}
+.badge .parrow.left{left:6px;border-right:14px solid var(--poss)}
+.badge .parrow.right{right:6px;border-left:14px solid var(--poss)}
+.badge .parrow.on{opacity:1}
+.badge .center{position:absolute;left:50%;top:0;width:150px;height:84px;margin-left:-75px;border-radius:8px;z-index:2;display:flex;flex-direction:column;justify-content:center;gap:3px;padding:5px 24px;background:linear-gradient(180deg,var(--dark-hi,#1d2633),var(--dark));box-shadow:0 0 14px #0009}
 .badge .timing{display:grid;grid-template-columns:1fr auto;grid-template-areas:"clock clock" "period aux";align-items:center;row-gap:4px}
 .badge .clock{grid-area:clock;text-align:center;font-size:38px;line-height:1}
 .badge .period{grid-area:period;font-size:19px;color:#ffffffc8;text-transform:uppercase;line-height:1;padding-left:2px}

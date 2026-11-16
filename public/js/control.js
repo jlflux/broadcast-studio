@@ -727,7 +727,7 @@ function renderStyle() {
   byId('sLayout').value = style.layout; byId('sPosition').value = style.position; byId('sScale').value = style.scale;
   byId('sNames').value = style.names; byId('sNudgeX').value = style.nudgeX; byId('sNudgeY').value = style.nudgeY;
   byId('sGraphic').value = style.graphicPlacement; byId('sBanner').value = style.bannerSeconds;
-  byId('sDark').value = style.dark; byId('sAccent').value = style.accent; byId('sPanel').value = style.panel || '#f2f4f7';
+  byId('sDark').value = style.dark; byId('sAccent').value = style.accent; byId('sPanel').value = style.panel || '#f2f4f7'; byId('sPoss').value = style.possColor || '#e3262f';
   byId('sRank').checked = style.showRank; byId('sRecords').checked = style.showRecords;
   byId('fMinutes').value = settings.football.minutes; byId('fTimeouts').value = settings.football.timeouts; byId('fPlay').value = settings.football.playClock;
   byId('bMinutes').value = settings.basketball.minutes; byId('bOT').value = settings.basketball.otMinutes || 4; byId('bTimeouts').value = settings.basketball.timeouts;
@@ -740,7 +740,7 @@ byId('styleForm').onsubmit = event => {
     Object.assign(d.style, {
       layout: byId('sLayout').value, position: byId('sPosition').value, scale: n('sScale', 40, 200), names: byId('sNames').value,
       nudgeX: n('sNudgeX', -1920, 1920), nudgeY: n('sNudgeY', -1080, 1080), graphicPlacement: byId('sGraphic').value,
-      bannerSeconds: n('sBanner', 0, 120), dark: byId('sDark').value, accent: byId('sAccent').value, panel: byId('sPanel').value,
+      bannerSeconds: n('sBanner', 0, 120), dark: byId('sDark').value, accent: byId('sAccent').value, panel: byId('sPanel').value, possColor: byId('sPoss').value,
       showRank: byId('sRank').checked, showRecords: byId('sRecords').checked,
     });
     Object.assign(d.settings.football, {minutes: n('fMinutes', 1, 30), timeouts: n('fTimeouts', 0, 9), playClock: n('fPlay', 5, 99)});
