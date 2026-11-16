@@ -24,7 +24,7 @@ export const defaultSettings = () => ({
 });
 
 export const defaultStyle = () => ({
-  layout: 'broadcast',       // 'broadcast' wide bar | 'corner' compact box
+  layout: 'broadcast',       // 'broadcast' wide bar | 'ribbon' slim bar | 'corner' compact box
   position: 'bottom-center', // top-left, top-center, top-right, bottom-left, bottom-center, bottom-right
   scale: 100, nudgeX: 0, nudgeY: 0,
   names: 'name',             // 'name' | 'short'
@@ -34,6 +34,7 @@ export const defaultStyle = () => ({
   bannerSeconds: 8,
   dark: '#101722',           // bug chrome color
   accent: '#f2a900',         // studio accent (banners, ticker label)
+  panel: '#f2f4f7',          // ribbon layout name plates
 });
 
 export function defaultLive() {

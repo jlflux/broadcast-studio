@@ -62,6 +62,9 @@ function teamMarkup(i, layout) {
     return `<div class="team ${side}" id="team${i}"><span class="stripe"></span>${mark}${name}${meta}<span class="poss" data-f="poss"></span><div class="score" data-f="score"></div></div>`;
   }
   const fouls = `<div class="fouls" data-f="foulsBox"><span data-f="fouls"></span><span class="bonus" data-f="bonus">BONUS</span></div>`;
+  if (layout === 'ribbon') {
+    return `<div class="team ${side}" id="team${i}"><div class="plate">${name}<div class="sub"><div class="ticks" data-f="timeouts"></div>${fouls}</div></div>${mark}<div class="score" data-f="score"></div><span class="poss" data-f="poss"></span></div>`;
+  }
   return `<div class="team ${side}" id="team${i}"><div class="trow">${name}${fouls}</div>${mark}<div class="score" data-f="score"></div><div class="meta"><div class="ticks" data-f="timeouts"></div></div><span class="poss" data-f="poss"></span></div>`;
 }
 
@@ -69,6 +72,9 @@ function bugMarkup(layout) {
   const timing = `<span class="period" id="period"></span><span class="clock" id="clock"></span><span class="aux" id="aux"></span>`;
   if (layout === 'corner') {
     return `${teamMarkup(0, layout)}${teamMarkup(1, layout)}<div class="foot">${timing}<span class="situation" id="situation"></span></div>`;
+  }
+  if (layout === 'ribbon') {
+    return `${teamMarkup(0, layout)}<div class="center" id="center"><div class="timing">${timing}</div><div class="situation" id="situation"></div></div>${teamMarkup(1, layout)}`;
   }
   return `${teamMarkup(0, layout)}<div class="center" id="center"><div class="situation" id="situation"></div><div class="timing">${timing}</div></div>${teamMarkup(1, layout)}`;
 }
@@ -99,6 +105,10 @@ function paintBug() {
   canvas.style.setProperty('--dark', style.dark);
   canvas.style.setProperty('--dark-hi', mix(style.dark, '#ffffff', 0.12));
   canvas.style.setProperty('--studio', style.accent);
+  const panel = style.panel || '#f2f4f7';
+  canvas.style.setProperty('--panel', panel);
+  canvas.style.setProperty('--panel-lo', shade(panel, 0.86));
+  canvas.style.setProperty('--panel-ink', readable(panel));
 
   const possession = sport === 'football' ? game.possession : game.arrow;
   const settings = live.settings[sport];
@@ -139,7 +149,7 @@ function paintBug() {
     const isHoops = sport === 'basketball';
     field(i, 'foulsBox').hidden = !isHoops;
     if (isHoops) {
-      setText(field(i, 'fouls'), `FOULS ${game.fouls[i]}`);
+      setText(field(i, 'fouls'), style.layout === 'ribbon' ? `${game.fouls[i]} FOULS` : `FOULS ${game.fouls[i]}`);
       field(i, 'bonus').hidden = game.fouls[1 - i] < settings.bonusAt;
     }
     field(i, 'poss').classList.toggle('on', possession === i);
@@ -285,7 +295,7 @@ let graphicKey = '';
 function paintGraphic() {
   const {graphic, teams, style} = live;
   let placement = style.graphicPlacement;
-  if (placement === 'auto') placement = style.layout === 'broadcast' && style.position.endsWith('center') ? 'stack' : 'lower-left';
+  if (placement === 'auto') placement = style.layout !== 'corner' && style.position.endsWith('center') ? 'stack' : 'lower-left';
   const target = placement === 'stack' ? byId('stackGraphic') : byId('lowerGraphic');
   const other = placement === 'stack' ? byId('lowerGraphic') : byId('stackGraphic');
   other.hidden = true;

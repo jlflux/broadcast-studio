@@ -12,7 +12,7 @@ It runs on Vercel with a Neon Postgres database (the same setup as the Homewood 
 | `/stats` | Stat keeper: rosters, tap-player-then-action stat entry, box score, play-by-play. Sends the score (and basketball team fouls) to the scorebug |
 | `/overlay` | The OBS Browser Source (1920 × 1080, transparent) |
 
-**Scorebug.** Football and basketball, each with its own saved game, so switching sports keeps both games. Two layouts: a wide **broadcast bar** and a compact **corner box**, placed in any of six positions with size and nudge controls. It shows timeouts, possession, down & distance or a status (FLAG, TIMEOUT, REVIEW…), the play clock or shot clock, team fouls, and a BONUS tag. Clocks run on the server's time, so every screen agrees. Basketball shows tenths under a minute.
+**Scorebug.** Football and basketball, each with its own saved game, so switching sports keeps both games. Three layouts: a wide **broadcast bar**, a slim **ribbon bar** (name plates, team-color logo tiles and score slabs around an angled clock tile, with its own plate color), and a compact **corner box**, placed in any of six positions with size and nudge controls. It shows timeouts, possession, down & distance or a status (FLAG, TIMEOUT, REVIEW…), the play clock or shot clock, team fouls, and a BONUS tag. Clocks run on the server's time, so every screen agrees. Basketball shows tenths under a minute.
 
 **Banners.** A message bar attached to the bug ("TOUCHDOWN {TEAM}", "3-POINTER"…), in a team's color, with a timer to hide it on its own.
 

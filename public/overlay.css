@@ -101,6 +101,47 @@ html,body{width:100%;height:100%;margin:0;overflow:hidden;background:transparent
 .corner .situation{margin-left:auto;font-weight:700;font-size:22px;text-transform:uppercase;white-space:nowrap;padding:1px 10px;border-radius:4px;background:var(--sit,#2a3442);color:var(--sit-ink,#fff)}
 .corner .situation:empty{display:none}
 
+/* Ribbon: slim bar. Name plates outside, team-color logo tile and score slab,
+   angled edges meeting a trapezoid clock tile in the middle. */
+.bug.ribbon{display:grid;grid-template-columns:450px 230px 450px;height:78px;filter:drop-shadow(0 6px 16px #0009)}
+.ribbon .team{background:none;display:grid;height:78px;min-width:0;color:var(--panel-ink)}
+.ribbon .team.left{grid-template-columns:minmax(0,1fr) 78px 108px;grid-template-areas:"plate mark score"}
+.ribbon .team.right{grid-template-columns:108px 78px minmax(0,1fr);grid-template-areas:"score mark plate"}
+.ribbon .plate{grid-area:plate;min-width:0;display:flex;flex-direction:column;justify-content:center;gap:5px;padding:0 16px;background:linear-gradient(180deg,var(--panel),var(--panel-lo));border-bottom:5px solid var(--accent)}
+.ribbon .left .plate{border-radius:8px 0 0 8px}
+.ribbon .right .plate{border-radius:0 8px 8px 0;align-items:flex-end;text-align:right}
+.ribbon .tname{display:flex;align-items:baseline;gap:6px;min-width:0;max-width:100%;font-weight:800;font-size:29px;line-height:1;text-transform:uppercase;letter-spacing:.01em;white-space:nowrap}
+.ribbon .right .tname{flex-direction:row-reverse}
+.ribbon .name{overflow:hidden;text-overflow:ellipsis}
+.ribbon .rank{background:none;color:var(--panel-ink);opacity:.6;font-size:20px;padding:0;margin:0}
+.ribbon .record{font-size:18px;margin:0;opacity:.6}
+.ribbon .sub{display:flex;align-items:center;gap:12px;height:16px}
+.ribbon .right .sub{flex-direction:row-reverse}
+.ribbon .ticks{width:96px;gap:4px}
+.ribbon .tick{height:6px;border-radius:2px;opacity:.22}
+.ribbon .tick.ready{opacity:.9}
+.ribbon .fouls{font-size:16px;letter-spacing:.06em;font-weight:700;opacity:.85}
+.ribbon .bonus{font-size:13px;padding:0 5px}
+.ribbon .mark{grid-area:mark;display:grid;place-items:center;padding:8px;background:linear-gradient(180deg,var(--team),var(--team-dark));color:var(--team-ink)}
+.ribbon .mark img{max-height:62px}
+.ribbon .short{font-size:26px}
+.ribbon .score{grid-area:score;display:grid;place-items:center;font-size:64px;line-height:1;background:linear-gradient(180deg,var(--team-dark),var(--team));color:var(--team-ink);border-left:2px solid #0003}
+.ribbon .right .score{border-left:0;border-right:2px solid #0003}
+.ribbon .score.wide{font-size:52px}
+.ribbon .left .score{clip-path:polygon(0 0,100% 0,calc(100% - 16px) 100%,0 100%);padding-right:12px}
+.ribbon .right .score{clip-path:polygon(0 0,100% 0,100% 100%,16px 100%);padding-left:12px}
+.ribbon .poss{bottom:0;top:auto;border:0;width:62px;height:5px;background:var(--studio);border-radius:3px 3px 0 0}
+.ribbon .left .poss{right:30px}
+.ribbon .right .poss{left:30px}
+.ribbon .center{margin:0 -12px;position:relative;z-index:1;display:flex;flex-direction:column;justify-content:center;clip-path:polygon(16px 0,calc(100% - 16px) 0,100% 100%,0 100%);background:linear-gradient(180deg,var(--dark-hi,#1d2633),var(--dark))}
+.ribbon .timing{display:flex;align-items:center;justify-content:center;gap:10px;padding:0 24px}
+.ribbon .period{font-size:22px;color:#ffffffc8;text-transform:uppercase}
+.ribbon .clock{font-size:42px;line-height:1}
+.ribbon .aux{font-size:22px;height:30px;min-width:38px;border-width:2px}
+.ribbon .situation{align-self:center;margin-top:3px;padding:0 10px;border-radius:4px;font-weight:800;font-size:17px;line-height:22px;text-transform:uppercase;white-space:nowrap;background:var(--sit,#2a3442);color:var(--sit-ink,#fff)}
+.ribbon .situation:empty{display:none}
+.ribbon .center:not(.nosit) .clock{font-size:34px}
+
 /* ── Banner ──────────────────────────────────────────────────────────────── */
 .banner{min-width:420px;max-width:1000px;padding:6px 30px;border-radius:9px;background:linear-gradient(180deg,var(--b,#f2a900),var(--b-dark,#ae7900));color:var(--b-ink,#111);font-weight:800;font-size:38px;letter-spacing:.05em;text-transform:uppercase;text-align:center;white-space:nowrap;box-shadow:0 6px 18px #0007;animation:bannerIn .4s cubic-bezier(.2,.8,.2,1) both}
 .corner~.banner,.banner.small{font-size:28px;min-width:300px}
