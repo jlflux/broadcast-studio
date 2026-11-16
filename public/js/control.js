@@ -62,7 +62,7 @@ const PERIODS = {
   football: ['1st', '2nd', 'HALF', '3rd', '4th', 'OT', '2OT', '3OT', '4OT', 'FINAL'],
   basketball: ['1st', '2nd', 'HALF', '3rd', '4th', 'OT', '2OT', '3OT', 'FINAL'],
 };
-const STATUSES = {football: ['FLAG', 'TIMEOUT', 'INJURY', 'REVIEW', 'HALFTIME', 'FINAL'], basketball: ['TIMEOUT', 'REVIEW', 'HALFTIME', 'FINAL']};
+const STATUSES = {football: ['TIMEOUT', 'REVIEW', 'FLAG'], basketball: ['TIMEOUT', 'REVIEW']};
 const QUICK_BANNERS = {
   football: ['TOUCHDOWN {TEAM}', 'FIELD GOAL {TEAM}', 'SAFETY', 'INTERCEPTION', 'FUMBLE', 'FIRST DOWN', '2-PT GOOD', 'TIMEOUT {TEAM}'],
   basketball: ['3-POINTER', 'AND ONE', 'BUZZER BEATER', 'TIMEOUT {TEAM}', '{TEAM} IN THE BONUS', 'TECHNICAL FOUL'],

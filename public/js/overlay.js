@@ -68,7 +68,7 @@ function teamMarkup(i, layout) {
   if (layout === 'ribbon') {
     return `<div class="team ${side}" id="team${i}"><div class="plate">${name}<div class="sub"><div class="ticks" data-f="timeouts"></div>${fouls}</div></div>${mark}<div class="score" data-f="score"></div><span class="poss" data-f="poss"></span></div>`;
   }
-  return `<div class="team ${side}" id="team${i}"><div class="trow">${name}${fouls}</div>${mark}<div class="score" data-f="score"></div><div class="meta"><div class="ticks" data-f="timeouts"></div></div><span class="poss" data-f="poss"></span></div>`;
+  return `<div class="team ${side}" id="team${i}"><div class="trow">${name}</div>${mark}<div class="score" data-f="score"></div><div class="meta"><div class="ticks" data-f="timeouts"></div></div>${fouls}<span class="poss" data-f="poss"></span></div>`;
 }
 
 function bugMarkup(layout) {
@@ -165,17 +165,24 @@ function paintBug() {
   byId('possLeft')?.classList.toggle('on', possession === 0);
   byId('possRight')?.classList.toggle('on', possession === 1);
 
-  // Situation: football down & distance (or status); basketball status only.
-  let situation = game.status;
-  // Down & distance only shows while a team has the ball.
-  if (!situation && sport === 'football' && game.down && game.possession >= 0) {
+  // Status (TIMEOUT, REVIEW, FLAG) pops out of the clock box as a tab.
+  const pop = byId('statusPop');
+  const status = game.status && show ? game.status : '';
+  const top = style.position.startsWith('top');
+  pop.className = `pop ${style.layout}${top ? ' top' : ''}${status === 'FLAG' ? ' flag' : ''}${status ? ' on' : ''}`;
+  if (status) setText('statusText', status);
+  byId('bugWrap').className = (status ? 'popped' : '') + (top ? ' top' : '');
+
+  // Situation: football down & distance, only while a team has the ball.
+  let situation = '';
+  if (sport === 'football' && game.down && game.possession >= 0) {
     const distance = /^goal$/i.test(game.distance) ? 'Goal' : game.distance;
     situation = `${['1st', '2nd', '3rd', '4th'][game.down - 1]} & ${distance}` + (game.ballOn && style.layout === 'corner' ? ` · ${game.ballOn}` : '');
   }
   const sit = byId('situation');
   setText(sit, situation);
   sit.classList.toggle('compact', situation.length > 13);
-  const sitColor = game.status === 'FLAG' ? '#ffd400' : game.status ? '#3a4656' : possession >= 0 ? teams[possession].color : '#2a3442';
+  const sitColor = possession >= 0 ? teams[possession].color : '#2a3442';
   sit.style.setProperty('--sit', sitColor);
   sit.style.setProperty('--sit-dark', shade(sitColor, 0.7));
   sit.style.setProperty('--sit-ink', readable(sitColor));

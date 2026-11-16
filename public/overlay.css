@@ -43,24 +43,27 @@ html,body{width:100%;height:100%;margin:0;overflow:hidden;background:transparent
 .bug.broadcast{width:1000px;height:124px;display:grid;grid-template-columns:350px 300px 350px;border-radius:12px;overflow:hidden;background:var(--dark)}
 .broadcast .team.left{border-left:8px solid var(--accent)}
 .broadcast .team.right{border-right:8px solid var(--accent)}
-.broadcast .team{display:grid;grid-template-rows:32px 1fr 20px;grid-template-columns:112px minmax(0,1fr)}
-.broadcast .team.right{grid-template-columns:minmax(0,1fr) 112px}
-.broadcast .trow{grid-row:1;grid-column:1/-1;display:flex;align-items:center;justify-content:space-between;gap:8px;padding:5px 14px 0;min-width:0}
-.broadcast .right .trow{flex-direction:row-reverse}
+.broadcast .team{display:grid;grid-template-rows:32px 1fr 22px;grid-template-columns:170px minmax(0,1fr)}
+.broadcast .team.right{grid-template-columns:minmax(0,1fr) 170px}
+.broadcast .trow{grid-row:1;grid-column:1;display:flex;align-items:center;padding:5px 12px 0 14px;min-width:0}
+.broadcast .right .trow{grid-column:2;justify-content:flex-end;padding:5px 14px 0 12px}
 .broadcast .tname{display:flex;align-items:center;min-width:0;font-weight:700;font-size:21px;text-transform:uppercase;letter-spacing:.02em;white-space:nowrap}
 .broadcast .name{overflow:hidden;text-overflow:ellipsis}
-.broadcast .mark{grid-row:2/span 2;grid-column:1;display:grid;place-items:center;padding:4px 8px 10px 12px;min-height:0}
-.broadcast .right .mark{grid-column:2;padding:4px 12px 10px 8px}
+.broadcast .mark{grid-row:2/span 2;grid-column:1;display:grid;place-items:center;padding:4px 10px 10px 14px;min-height:0}
+.broadcast .right .mark{grid-column:2;padding:4px 14px 10px 10px}
 .mark img{max-width:100%;max-height:100%;object-fit:contain;filter:drop-shadow(0 1px 2px #0007)}
 .broadcast .mark img{max-height:76px}
 .mark img.backed{background:#fff;border-radius:50%;padding:6px}
 .short{font-weight:800;font-size:34px;letter-spacing:.03em}
-.broadcast .score{grid-row:2;grid-column:2;align-self:center;font-size:78px;line-height:64px;border-radius:6px}
+.broadcast.basketball .mark{grid-row:2;padding-bottom:2px}
+.broadcast.basketball .mark img{max-height:62px}
+.broadcast .fouls{grid-row:3;grid-column:1;justify-content:center;font-size:17px;padding-bottom:4px}
+.broadcast .right .fouls{grid-column:2}
+.broadcast .score{grid-row:1/span 2;grid-column:2;align-self:center;font-size:108px;line-height:92px;padding-top:6px;border-radius:6px}
 .broadcast .right .score{grid-column:1}
-.broadcast .score.wide{font-size:68px}
-.broadcast .meta{grid-row:3;grid-column:2;padding:4px 30px 0;align-self:start}
+.broadcast .score.wide{font-size:88px}
+.broadcast .meta{grid-row:3;grid-column:2;padding:2px 26px 0;align-self:start}
 .broadcast .right .meta{grid-column:1}
-.broadcast .fouls{font-size:18px}
 .broadcast .poss{top:50%;margin-top:-9px;right:-1px;border-right-color:var(--poss)}
 .broadcast .right .poss{right:auto;left:-1px;border-right-color:transparent;border-left-color:var(--poss)}
 .broadcast .center{display:grid;grid-template-rows:52px 1fr;background:linear-gradient(#05080d 45%,var(--dark-hi,#1d2633))}
@@ -187,6 +190,24 @@ html,body{width:100%;height:100%;margin:0;overflow:hidden;background:transparent
 .badge .center:not(.nosit) .period{font-size:16px}
 .badge .center:not(.nosit) .aux{font-size:14px;height:18px}
 .badge .center:not(.nosit) .timing{row-gap:1px}
+
+/* Status tab (TIMEOUT / REVIEW / FLAG): slides out from behind the clock box. */
+#bugWrap{position:relative;transition:padding .3s ease}
+#bugWrap.popped{padding-top:40px}
+#bugWrap.popped.top{padding-top:0;padding-bottom:40px}
+#bug{position:relative;z-index:1}
+.pop{position:absolute;top:0;left:50%;z-index:0;height:42px;min-width:200px;padding:0 22px;display:grid;place-items:center;border-radius:9px 9px 0 0;background:linear-gradient(180deg,var(--dark-hi,#1d2633),var(--dark));color:#fff;font-weight:800;font-size:30px;letter-spacing:.08em;text-transform:uppercase;white-space:nowrap;box-shadow:0 -4px 14px #0006;transform:translate(-50%,100%);opacity:0;transition:transform .35s cubic-bezier(.2,.8,.2,1),opacity .2s}
+.pop.on{transform:translate(-50%,2px);opacity:1}
+.pop.top{top:auto;bottom:0;border-radius:0 0 9px 9px;box-shadow:0 4px 14px #0006;transform:translate(-50%,-100%)}
+.pop.top.on{transform:translate(-50%,-2px)}
+.pop.flag{background:linear-gradient(180deg,#ffe14a,#ffd400);color:#111}
+.pop.broadcast{min-width:300px}
+.pop.ribbon{min-width:206px;font-size:26px;height:38px}
+.pop.badge{min-width:150px;font-size:24px;height:36px;padding:0 16px}
+.pop.corner{left:0;transform:translate(0,100%);min-width:200px;font-size:24px;height:36px;border-radius:0 9px 0 0}
+.pop.corner.on{transform:translate(0,2px)}
+.pop.corner.top{border-radius:0 0 9px 0;transform:translate(0,-100%)}
+.pop.corner.top.on{transform:translate(0,-2px)}
 
 /* ── Banner ──────────────────────────────────────────────────────────────── */
 .banner{min-width:420px;max-width:1000px;padding:6px 30px;border-radius:9px;background:linear-gradient(180deg,var(--b,#f2a900),var(--b-dark,#ae7900));color:var(--b-ink,#111);font-weight:800;font-size:38px;letter-spacing:.05em;text-transform:uppercase;text-align:center;white-space:nowrap;box-shadow:0 6px 18px #0007;animation:bannerIn .4s cubic-bezier(.2,.8,.2,1) both}
