@@ -24,7 +24,7 @@ export const defaultSettings = () => ({
 });
 
 export const defaultStyle = () => ({
-  layout: 'broadcast',       // 'broadcast' wide bar | 'ribbon' slim bar | 'badge' round clock | 'corner' compact box
+  layout: 'broadcast',       // 'broadcast' wide bar | 'ribbon' slim bar | 'badge' team cards + clock tile | 'corner' compact box
   position: 'bottom-center', // top-left, top-center, top-right, bottom-left, bottom-center, bottom-right
   scale: 100, nudgeX: 0, nudgeY: 0,
   names: 'name',             // 'name' | 'short'

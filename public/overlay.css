@@ -142,43 +142,46 @@ html,body{width:100%;height:100%;margin:0;overflow:hidden;background:transparent
 .ribbon .situation:empty{display:none}
 .ribbon .center:not(.nosit) .clock{font-size:34px}
 
-/* Badge: two team cards meeting at a round clock badge. Cards use the plate
-   color; a team-color wedge holds the logo; timeouts run along the bottom. */
-.bug.badge{position:relative;width:1000px;height:132px}
-.badge .team{position:absolute;top:24px;width:468px;height:84px;display:grid;align-items:center;border-radius:12px;overflow:hidden;color:var(--panel-ink);background:var(--panel);box-shadow:0 6px 18px #0008}
-.badge .team.left{left:0;grid-template-columns:104px minmax(0,1fr) 112px 58px;grid-template-areas:"mark info score .";background:linear-gradient(110deg,var(--team) 0 92px,var(--team-dark) 92px 100px,var(--panel) 100px,var(--panel-lo))}
-.badge .team.right{right:0;grid-template-columns:58px 112px minmax(0,1fr) 104px;grid-template-areas:". score info mark";background:linear-gradient(250deg,var(--team) 0 92px,var(--team-dark) 92px 100px,var(--panel) 100px,var(--panel-lo))}
-.badge .mark{grid-area:mark;height:84px;display:grid;place-items:center;padding:10px 14px 14px;color:var(--team-ink)}
-.badge .left .mark{padding-right:22px}
-.badge .right .mark{padding-left:22px}
-.badge .mark img{max-height:60px}
-.badge .short{font-size:26px}
-.badge .info{grid-area:info;min-width:0;display:flex;flex-direction:column;gap:3px;padding:0 8px 6px}
+/* Badge: two team cards (plate color, team-color logo wedge, timeouts along
+   the bottom edge) meeting at a raised clock tile. */
+.bug.badge{position:relative;width:900px;height:110px}
+.badge .team{position:absolute;top:13px;width:392px;height:84px;display:grid;align-items:center;border-radius:10px;overflow:hidden;color:var(--panel-ink);background:var(--panel);box-shadow:0 6px 18px #0008}
+.badge .team.left{left:0;grid-template-columns:92px minmax(0,1fr) auto 26px;grid-template-areas:"mark info score .";background:linear-gradient(110deg,var(--team) 0 80px,var(--team-dark) 80px 88px,var(--panel) 88px,var(--panel-lo))}
+.badge .team.right{right:0;grid-template-columns:26px auto minmax(0,1fr) 92px;grid-template-areas:". score info mark";background:linear-gradient(250deg,var(--team) 0 80px,var(--team-dark) 80px 88px,var(--panel) 88px,var(--panel-lo))}
+.badge .mark{grid-area:mark;height:84px;display:grid;place-items:center;padding:10px 12px 14px;color:var(--team-ink)}
+.badge .left .mark{padding-right:20px}
+.badge .right .mark{padding-left:20px}
+.badge .mark img{max-height:58px}
+.badge .short{font-size:24px}
+.badge .info{grid-area:info;min-width:0;display:flex;flex-direction:column;gap:3px;padding:0 6px 6px}
 .badge .right .info{align-items:flex-end;text-align:right}
-.badge .tname{display:flex;flex-wrap:wrap;align-items:baseline;column-gap:6px;font-weight:800;font-size:30px;line-height:1;text-transform:uppercase;min-width:0;max-width:100%}
+.badge .tname{display:flex;flex-wrap:wrap;align-items:baseline;column-gap:6px;font-weight:800;font-size:28px;line-height:1;text-transform:uppercase;min-width:0;max-width:100%}
 .badge .right .tname{flex-direction:row-reverse}
 .badge .name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
-.badge .rank{background:none;color:var(--panel-ink);opacity:.55;font-size:20px;padding:0;margin:0}
-.badge .record{flex-basis:100%;margin:2px 0 0;font-size:17px;opacity:.6;font-weight:700}
-.badge .fouls{font-size:15px;letter-spacing:.06em;opacity:.85}
+.badge .rank{background:none;color:var(--panel-ink);opacity:.55;font-size:19px;padding:0;margin:0}
+.badge .record{flex-basis:100%;margin:2px 0 0;font-size:16px;opacity:.6;font-weight:700}
+.badge .fouls{font-size:14px;letter-spacing:.06em;opacity:.85}
 .badge .bonus{font-size:12px;padding:0 5px}
-.badge .score{grid-area:score;font-size:66px;line-height:1;padding-bottom:6px;color:var(--panel-ink)}
-.badge .score.wide{font-size:54px}
-.badge .ticks{position:absolute;bottom:0;height:7px;gap:3px;color:var(--team)}
-.badge .left .ticks{left:100px;right:68px}
-.badge .right .ticks{left:68px;right:100px}
-.badge .tick{height:7px;border-radius:0;opacity:.18}
+.badge .score{grid-area:score;min-width:76px;font-size:62px;line-height:1;padding:0 4px 6px;color:var(--panel-ink)}
+.badge .score.wide{font-size:52px}
+.badge .ticks{position:absolute;bottom:0;height:6px;gap:3px;color:var(--team)}
+.badge .left .ticks{left:88px;right:14px}
+.badge .right .ticks{left:14px;right:88px}
+.badge .tick{height:6px;border-radius:0;opacity:.18}
 .badge .tick.ready{opacity:1}
-.badge .poss{top:50%;margin-top:-7px;width:14px;height:14px;border:0;border-radius:50%;background:var(--studio)}
-.badge .left .poss{right:64px}
-.badge .right .poss{left:64px}
-.badge .center{position:absolute;left:50%;top:0;width:132px;height:132px;margin-left:-66px;border-radius:50%;z-index:2;display:grid;place-items:center;background:radial-gradient(circle at 50% 35%,var(--dark-hi,#1d2633),var(--dark) 70%);box-shadow:0 0 0 5px var(--studio),0 8px 22px #000a}
-.badge .timing{display:flex;flex-direction:column;align-items:center;gap:1px;margin-top:-4px}
-.badge .period{font-size:18px;color:#ffffffc0;text-transform:uppercase;letter-spacing:.04em;line-height:1}
-.badge .clock{font-size:38px;line-height:1}
-.badge .aux{font-size:16px;height:22px;min-width:32px;border-width:2px;border-radius:11px;margin-top:2px}
-.badge .situation{position:absolute;bottom:-14px;left:50%;transform:translateX(-50%);padding:1px 12px;border-radius:12px;font-weight:800;font-size:17px;line-height:22px;text-transform:uppercase;white-space:nowrap;background:var(--sit,#2a3442);color:var(--sit-ink,#fff);box-shadow:0 2px 8px #0008}
+.badge .poss{top:12px;width:0;height:0;border:7px solid transparent;border-radius:0;background:none}
+.badge .left .poss{right:10px;border-right-color:var(--studio);border-right-width:9px;border-left-width:0}
+.badge .right .poss{left:10px;border-left-color:var(--studio);border-left-width:9px;border-right-width:0}
+.badge .center{position:absolute;left:50%;top:0;width:136px;height:110px;margin-left:-68px;border-radius:10px;z-index:2;display:flex;flex-direction:column;justify-content:center;gap:4px;padding:8px 10px;background:linear-gradient(180deg,var(--dark-hi,#1d2633),var(--dark));box-shadow:inset 0 0 0 2px var(--studio),0 8px 22px #000a}
+.badge .timing{display:grid;grid-template-columns:1fr auto;grid-template-areas:"clock clock" "period aux";align-items:center;row-gap:4px}
+.badge .clock{grid-area:clock;text-align:center;font-size:42px;line-height:1}
+.badge .period{grid-area:period;font-size:20px;color:#ffffffc8;text-transform:uppercase;line-height:1;padding-left:2px}
+.badge .aux{grid-area:aux;font-size:18px;height:24px;min-width:34px;border-width:2px;border-radius:5px}
+.badge .period:only-of-type{grid-column:1/-1}
+.badge .situation{align-self:center;padding:0 8px;border-radius:4px;font-weight:800;font-size:15px;line-height:20px;text-transform:uppercase;white-space:nowrap;background:var(--sit,#2a3442);color:var(--sit-ink,#fff)}
 .badge .situation:empty{display:none}
+.badge .center:not(.nosit) .clock{font-size:34px}
+.badge .center:not(.nosit) .timing{row-gap:2px}
 
 /* ── Banner ──────────────────────────────────────────────────────────────── */
 .banner{min-width:420px;max-width:1000px;padding:6px 30px;border-radius:9px;background:linear-gradient(180deg,var(--b,#f2a900),var(--b-dark,#ae7900));color:var(--b-ink,#111);font-weight:800;font-size:38px;letter-spacing:.05em;text-transform:uppercase;text-align:center;white-space:nowrap;box-shadow:0 6px 18px #0007;animation:bannerIn .4s cubic-bezier(.2,.8,.2,1) both}
