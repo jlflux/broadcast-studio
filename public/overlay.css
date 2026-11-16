@@ -144,8 +144,8 @@ html,body{width:100%;height:100%;margin:0;overflow:hidden;background:transparent
 
 /* Badge: two team cards (plate color, team-color logo wedge, timeouts along
    the bottom edge) meeting at a raised clock tile. */
-.bug.badge{position:relative;width:900px;height:110px}
-.badge .team{position:absolute;top:13px;width:392px;height:84px;display:grid;align-items:center;border-radius:10px;overflow:hidden;color:var(--panel-ink);background:var(--panel);box-shadow:0 6px 18px #0008}
+.bug.badge{position:relative;width:890px;height:84px}
+.badge .team{position:absolute;top:0;width:392px;height:84px;display:grid;align-items:center;border-radius:10px;overflow:hidden;color:var(--panel-ink);background:var(--panel);box-shadow:0 6px 18px #0008}
 .badge .team.left{left:0;grid-template-columns:92px minmax(0,1fr) auto 26px;grid-template-areas:"mark info score .";background:linear-gradient(110deg,var(--team) 0 80px,var(--team-dark) 80px 88px,var(--panel) 88px,var(--panel-lo))}
 .badge .team.right{right:0;grid-template-columns:26px auto minmax(0,1fr) 92px;grid-template-areas:". score info mark";background:linear-gradient(250deg,var(--team) 0 80px,var(--team-dark) 80px 88px,var(--panel) 88px,var(--panel-lo))}
 .badge .mark{grid-area:mark;height:84px;display:grid;place-items:center;padding:10px 12px 14px;color:var(--team-ink)}
@@ -172,16 +172,18 @@ html,body{width:100%;height:100%;margin:0;overflow:hidden;background:transparent
 .badge .poss{top:12px;width:0;height:0;border:7px solid transparent;border-radius:0;background:none}
 .badge .left .poss{right:10px;border-right-color:var(--studio);border-right-width:9px;border-left-width:0}
 .badge .right .poss{left:10px;border-left-color:var(--studio);border-left-width:9px;border-right-width:0}
-.badge .center{position:absolute;left:50%;top:0;width:136px;height:110px;margin-left:-68px;border-radius:10px;z-index:2;display:flex;flex-direction:column;justify-content:center;gap:4px;padding:8px 10px;background:linear-gradient(180deg,var(--dark-hi,#1d2633),var(--dark));box-shadow:inset 0 0 0 2px var(--studio),0 8px 22px #000a}
+.badge .center{position:absolute;left:50%;top:0;width:130px;height:84px;margin-left:-65px;border-radius:8px;z-index:2;display:flex;flex-direction:column;justify-content:center;gap:3px;padding:5px 10px;background:linear-gradient(180deg,var(--dark-hi,#1d2633),var(--dark));box-shadow:0 0 14px #0009}
 .badge .timing{display:grid;grid-template-columns:1fr auto;grid-template-areas:"clock clock" "period aux";align-items:center;row-gap:4px}
-.badge .clock{grid-area:clock;text-align:center;font-size:42px;line-height:1}
-.badge .period{grid-area:period;font-size:20px;color:#ffffffc8;text-transform:uppercase;line-height:1;padding-left:2px}
-.badge .aux{grid-area:aux;font-size:18px;height:24px;min-width:34px;border-width:2px;border-radius:5px}
+.badge .clock{grid-area:clock;text-align:center;font-size:38px;line-height:1}
+.badge .period{grid-area:period;font-size:19px;color:#ffffffc8;text-transform:uppercase;line-height:1;padding-left:2px}
+.badge .aux{grid-area:aux;font-size:17px;height:22px;min-width:34px;border-width:2px;border-radius:5px}
 .badge .period:only-of-type{grid-column:1/-1}
-.badge .situation{align-self:center;padding:0 8px;border-radius:4px;font-weight:800;font-size:15px;line-height:20px;text-transform:uppercase;white-space:nowrap;background:var(--sit,#2a3442);color:var(--sit-ink,#fff)}
+.badge .situation{align-self:center;padding:0 8px;border-radius:4px;font-weight:800;font-size:14px;line-height:17px;text-transform:uppercase;white-space:nowrap;background:var(--sit,#2a3442);color:var(--sit-ink,#fff)}
 .badge .situation:empty{display:none}
-.badge .center:not(.nosit) .clock{font-size:34px}
-.badge .center:not(.nosit) .timing{row-gap:2px}
+.badge .center:not(.nosit) .clock{font-size:27px}
+.badge .center:not(.nosit) .period{font-size:16px}
+.badge .center:not(.nosit) .aux{font-size:14px;height:18px}
+.badge .center:not(.nosit) .timing{row-gap:1px}
 
 /* ── Banner ──────────────────────────────────────────────────────────────── */
 .banner{min-width:420px;max-width:1000px;padding:6px 30px;border-radius:9px;background:linear-gradient(180deg,var(--b,#f2a900),var(--b-dark,#ae7900));color:var(--b-ink,#111);font-weight:800;font-size:38px;letter-spacing:.05em;text-transform:uppercase;text-align:center;white-space:nowrap;box-shadow:0 6px 18px #0007;animation:bannerIn .4s cubic-bezier(.2,.8,.2,1) both}
