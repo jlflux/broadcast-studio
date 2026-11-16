@@ -179,6 +179,7 @@ function paintBug() {
   byId('center')?.classList.toggle('nosit', !situation);
   setText('period', game.period);
   byId('aux').hidden = !game.showAux;
+  byId('center')?.classList.toggle('noaux', !game.showAux);
   byId('aux').style.setProperty('--aux', possession >= 0 ? teams[possession].color : '#ffffff44');
   byId('clock').hidden = !game.showClock;
 
