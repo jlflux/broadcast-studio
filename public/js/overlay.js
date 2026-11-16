@@ -62,6 +62,9 @@ function teamMarkup(i, layout) {
     return `<div class="team ${side}" id="team${i}"><span class="stripe"></span>${mark}${name}${meta}<span class="poss" data-f="poss"></span><div class="score" data-f="score"></div></div>`;
   }
   const fouls = `<div class="fouls" data-f="foulsBox"><span data-f="fouls"></span><span class="bonus" data-f="bonus">BONUS</span></div>`;
+  if (layout === 'badge') {
+    return `<div class="team ${side}" id="team${i}">${mark}<div class="info">${name}${fouls}</div><div class="score" data-f="score"></div><div class="ticks" data-f="timeouts"></div><span class="poss" data-f="poss"></span></div>`;
+  }
   if (layout === 'ribbon') {
     return `<div class="team ${side}" id="team${i}"><div class="plate">${name}<div class="sub"><div class="ticks" data-f="timeouts"></div>${fouls}</div></div>${mark}<div class="score" data-f="score"></div><span class="poss" data-f="poss"></span></div>`;
   }
@@ -72,6 +75,9 @@ function bugMarkup(layout) {
   const timing = `<span class="period" id="period"></span><span class="clock" id="clock"></span><span class="aux" id="aux"></span>`;
   if (layout === 'corner') {
     return `${teamMarkup(0, layout)}${teamMarkup(1, layout)}<div class="foot">${timing}<span class="situation" id="situation"></span></div>`;
+  }
+  if (layout === 'badge') {
+    return `${teamMarkup(0, layout)}${teamMarkup(1, layout)}<div class="center" id="center"><div class="timing">${timing}</div><div class="situation" id="situation"></div></div>`;
   }
   if (layout === 'ribbon') {
     return `${teamMarkup(0, layout)}<div class="center" id="center"><div class="timing">${timing}</div><div class="situation" id="situation"></div></div>${teamMarkup(1, layout)}`;
@@ -149,7 +155,7 @@ function paintBug() {
     const isHoops = sport === 'basketball';
     field(i, 'foulsBox').hidden = !isHoops;
     if (isHoops) {
-      setText(field(i, 'fouls'), style.layout === 'ribbon' ? `${game.fouls[i]} FOULS` : `FOULS ${game.fouls[i]}`);
+      setText(field(i, 'fouls'), style.layout === 'ribbon' || style.layout === 'badge' ? `${game.fouls[i]} FOULS` : `FOULS ${game.fouls[i]}`);
       field(i, 'bonus').hidden = game.fouls[1 - i] < settings.bonusAt;
     }
     field(i, 'poss').classList.toggle('on', possession === i);
