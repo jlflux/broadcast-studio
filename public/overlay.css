@@ -149,8 +149,8 @@ html,body{width:100%;height:100%;margin:0;overflow:hidden;background:transparent
    the bottom edge) meeting at a raised clock tile. */
 .bug.badge{position:relative;width:890px;height:84px}
 .badge .team{position:absolute;top:0;width:392px;height:84px;display:grid;align-items:center;border-radius:10px;overflow:hidden;color:var(--panel-ink);background:var(--panel);box-shadow:0 6px 18px #0008}
-.badge .team.left{left:0;grid-template-columns:92px minmax(0,1fr) auto 26px;grid-template-areas:"mark info score .";background:linear-gradient(110deg,var(--team) 0 80px,var(--team-dark) 80px 88px,var(--panel) 88px,var(--panel-lo))}
-.badge .team.right{right:0;grid-template-columns:26px auto minmax(0,1fr) 92px;grid-template-areas:". score info mark";background:linear-gradient(250deg,var(--team) 0 80px,var(--team-dark) 80px 88px,var(--panel) 88px,var(--panel-lo))}
+.badge .team.left{left:0;grid-template-columns:92px minmax(0,1fr) auto 44px;grid-template-areas:"mark info score .";background:linear-gradient(110deg,var(--team) 0 80px,var(--team-dark) 80px 88px,var(--panel) 88px,var(--panel-lo))}
+.badge .team.right{right:0;grid-template-columns:44px auto minmax(0,1fr) 92px;grid-template-areas:". score info mark";background:linear-gradient(250deg,var(--team) 0 80px,var(--team-dark) 80px 88px,var(--panel) 88px,var(--panel-lo))}
 .badge .mark{grid-area:mark;height:84px;display:grid;place-items:center;padding:10px 12px 14px;color:var(--team-ink)}
 .badge .left .mark{padding-right:20px}
 .badge .right .mark{padding-left:20px}
@@ -168,8 +168,8 @@ html,body{width:100%;height:100%;margin:0;overflow:hidden;background:transparent
 .badge .score{grid-area:score;min-width:76px;font-size:62px;line-height:1;padding:0 4px 6px;color:var(--panel-ink)}
 .badge .score.wide{font-size:52px}
 .badge .ticks{position:absolute;bottom:0;height:6px;gap:3px;color:var(--team)}
-.badge .left .ticks{left:88px;right:14px}
-.badge .right .ticks{left:14px;right:88px}
+.badge .left .ticks{left:96px;right:38px}
+.badge .right .ticks{left:38px;right:96px}
 .badge .tick{height:6px;border-radius:0;opacity:.18}
 .badge .tick.ready{opacity:1}
 .badge .poss{display:none}
