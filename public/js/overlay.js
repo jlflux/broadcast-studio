@@ -9,6 +9,10 @@ const params = new URLSearchParams(location.search);
 const layers = new Set((params.get('layers') || 'bug,banner,graphic,ticker').split(',').map(s => s.trim()));
 const key = new URLSearchParams(location.hash.slice(1)).get('key');
 const canvas = byId('canvas');
+// Preview mode (used inside the control panel): shows a graphic the control
+// panel sends with postMessage instead of the one on air.
+const previewMode = params.get('preview') === '1';
+let previewGraphic = null;
 
 let live = null;
 let tickerDoc = null;
@@ -310,7 +314,8 @@ function graphicContent(graphic, teams) {
 
 let graphicKey = '';
 function paintGraphic() {
-  const {graphic, teams, style} = live;
+  const {teams, style} = live;
+  const graphic = previewMode ? previewGraphic : live.graphic;
   let placement = style.graphicPlacement;
   if (placement === 'auto') placement = style.layout !== 'corner' && style.position.endsWith('center') ? 'stack' : 'lower-left';
   const target = placement === 'stack' ? byId('stackGraphic') : byId('lowerGraphic');
@@ -362,6 +367,15 @@ function paint() {
   } catch (error) {
     console.error('Overlay paint failed', error);
   }
+}
+
+if (previewMode) {
+  addEventListener('message', event => {
+    if (event.origin !== location.origin || !event.data || !('studioPreview' in event.data)) return;
+    const graphic = event.data.studioPreview;
+    previewGraphic = graphic && typeof graphic === 'object' ? {...graphic, until: 0} : null;
+    if (live) paintGraphic();
+  });
 }
 
 if (!key) byId('keyMissing').hidden = false;

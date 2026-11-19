@@ -61,3 +61,25 @@ legend{font-size:12px;color:#c1cddb;padding:0 4px}
 #serMap .dec{font:12px ui-monospace,monospace;color:#ffd77a}
 @media(max-width:960px){.workspace{grid-template-columns:1fr}aside{position:static;order:-1}.keys{display:none}}
 .card>header .row select,.card>header .row input{width:auto!important}
+/* Stat graphics tab */
+.frameTag{position:absolute;top:8px;left:8px;font-size:10px;font-weight:800;letter-spacing:.08em;background:#1f6f3d;color:#fff;border-radius:4px;padding:2px 6px}
+.sgPicked{margin:10px 0;font-weight:700;font-size:15px;min-height:22px}
+.sgPicked small{display:block;color:var(--sub);font-weight:600;font-size:12px}
+.sgGrid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.25fr);gap:12px;align-items:start}
+.sgGrid>.card{margin-bottom:12px}
+.sgPlayers{display:grid;gap:12px}
+.sgTeam h3{font:800 16px/1.1 "Barlow Condensed",sans-serif;text-transform:uppercase;letter-spacing:.03em;border-left:4px solid var(--c,#7d8ea6);padding-left:7px;margin-bottom:6px}
+.sgTeam .chips{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:6px}
+.sgTeam .chips button{display:flex;align-items:center;gap:6px;justify-content:space-between;text-align:left;min-height:38px}
+.sgTeam .chips button b{color:var(--amber);font-variant-numeric:tabular-nums}
+.sgTeam .chips button span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis}
+.sgTeam .chips button small{color:var(--sub);font-variant-numeric:tabular-nums}
+.sgList{display:grid;gap:6px}
+.sgItem{display:flex;align-items:center;gap:8px;border:1px solid var(--line);border-radius:8px;padding:6px 6px 6px 10px;background:var(--sub-card);cursor:pointer}
+.sgItem:hover{border-color:var(--line-hi)}
+.sgItem.sel{border-color:var(--amber);background:#2a250f}
+.sgItem .what{flex:1;min-width:0}
+.sgItem .what small{display:block;font-size:11px;font-weight:750;letter-spacing:.05em;color:var(--sub);text-transform:uppercase}
+.sgItem .what strong{display:block;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sgList .empty{color:var(--sub);font-size:12px}
+@media(max-width:1100px){.sgGrid{grid-template-columns:1fr}}
