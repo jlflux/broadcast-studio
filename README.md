@@ -8,7 +8,7 @@ It runs on Vercel with a Neon Postgres database (the same setup as the Homewood 
 
 | Page | What it does |
 |---|---|
-| `/control` | Control panel: score, clocks, down & distance, fouls/bonus, possession, banners, graphics, ticker, teams, style, and scoreboard serial import |
+| `/control` | Control panel: score, clocks, down & distance, fouls/bonus, possession, banners, stat graphics, graphics, ticker, teams, style, and scoreboard serial import |
 | `/stats` | Stat keeper: rosters, tap-player-then-action stat entry, box score, play-by-play. Sends the score (and basketball team fouls) to the scorebug |
 | `/overlay` | The OBS Browser Source (1920 × 1080, transparent) |
 
@@ -17,6 +17,8 @@ It runs on Vercel with a Neon Postgres database (the same setup as the Homewood 
 **Banners.** A message bar attached to the bug ("TOUCHDOWN {TEAM}", "3-POINTER"…), in a team's color, with a timer to hide it on its own.
 
 **Graphics.** Player lower third (photo or jersey number, name, position, stat line), team stat comparison, and message/sponsor cards with an image. Save presets for one-click reuse. **Load player card** and **Load team stats** fill a graphic straight from the stat keeper, and the stat keeper's box score has an **On air** button on every player.
+
+**Stat graphics (basketball).** The control panel's **Stat graphics** tab turns the stat keeper's numbers into ready-made graphics. Tap a player to see their graphics with the numbers filled in: game line, scoring, three-pointers, free throws, this quarter, rebounds, assists, steals and blocks, double-doubles and fouls. Team graphics sit below: team stats, this quarter, shooting, game leaders, scoring by quarter, each team's leading scorers and the current run (4-0 or more). Tap one to see it in the preview, then **Take live**, or hit **Take** on a row to skip the preview. The numbers are locked in when you take a graphic, so they don't change while it's on air; take it again to update it. **Edit in Graphics tab** opens it in the graphic editor first.
 
 **Ticker.** The `jlflux/ticker` score ticker, run from the panel instead of `config.js`. As a bottom bar it lifts the scorebug and lower thirds above it. It reads Google Sheets (the same template, `ticker-sheet-template.csv`), ESPN scoreboards, games typed into the panel, and optionally the game on the scorebug. Corner box or bottom bar.
 

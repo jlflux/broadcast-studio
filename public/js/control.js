@@ -3,6 +3,7 @@ import {$, $$, byId, clamp, clockText, copy, Doc, esc, getSession, hexColor, onC
 import {freshGame} from './defaults.js';
 import {LEAGUES} from './ticker-layer.js';
 import {boxScore, compareRows, score as statsScore, statLine} from './stats-engine.js';
+import {playerBase, playerGraphics, teamGraphics} from './stat-graphics.js';
 import {ENCODINGS, FIELDS, SerialReader, decodeRaw, interpret, parseHex} from './serial.js';
 import {roleOf} from './feed.js';
 
@@ -10,7 +11,7 @@ import {roleOf} from './feed.js';
 const liveDoc = new Doc('live', {onChange: () => render(), interval: 800});
 const tickerDoc = new Doc('ticker', {onChange: () => renderTicker(), interval: 5000});
 const libraryDoc = new Doc('library', {onChange: () => renderLibrary(), interval: 6000});
-const statsDoc = new Doc('stats', {onChange: () => renderStatsLinks(), interval: 2500});
+const statsDoc = new Doc('stats', {onChange: () => { renderStatsLinks(); renderStatGraphics(); }, interval: 1500});
 const L = () => liveDoc.doc;
 const G = () => L().games[L().sport];
 let overlayKey = '';
@@ -49,11 +50,13 @@ function options(select, entries, value) {
 const sideOptions = () => [[-1, 'Studio accent'], [0, L().teams[0].name], [1, L().teams[1].name]];
 
 // ── Tabs ────────────────────────────────────────────────────────────────────
-const TABS = ['live', 'graphics', 'ticker', 'teams', 'style', 'scoreboard'];
+const TABS = ['live', 'statgfx', 'graphics', 'ticker', 'teams', 'style', 'scoreboard'];
 function setTab(tab) {
+  if (!TABS.includes(tab)) tab = 'live';
   $$('nav.tabs [data-tab]').forEach(b => { if (b.dataset.tab === tab) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current'); });
   TABS.forEach(name => { byId('tab-' + name).hidden = name !== tab; });
   local.set('tab', tab);
+  if (tab === 'statgfx') renderStatGraphics(true);
 }
 $$('nav.tabs [data-tab]').forEach(b => { b.onclick = () => setTab(b.dataset.tab); });
 
@@ -253,6 +256,7 @@ function tick() {
   setText('graphicLive', graphicUp ? `${graphic.title}${graphic.until ? ` (${Math.ceil((graphic.until - now) / 1000)}s)` : ''}` : 'None');
   byId('monitorClearGraphic').disabled = !graphicUp;
   byId('gClear').disabled = !graphicUp;
+  byId('sgClear').disabled = !graphicUp;
   const onAir = L().bugVisible || bannerUp || graphicUp || tickerDoc.doc?.visible;
   const status = byId('outputStatus');
   setText(status, onAir ? 'ON AIR' : 'STANDBY');
@@ -476,15 +480,10 @@ byId('loadPlayer').onclick = async () => {
   if (!player) return;
   const box = boxScore(stats.sport, stats);
   const entry = box.teams[team].players.find(p => p.player.id === id);
-  const POS = {QB: 'Quarterback', RB: 'Running Back', WR: 'Wide Receiver', TE: 'Tight End', LB: 'Linebacker', DB: 'Defensive Back', DL: 'Defensive Line', OL: 'Offensive Line', K: 'Kicker', P: 'Punter',
-    CB: 'Cornerback', S: 'Safety', DE: 'Defensive End', DT: 'Defensive Tackle', ATH: 'Athlete', G: 'Guard', F: 'Forward', C: 'Center', PG: 'Point Guard', SG: 'Shooting Guard', SF: 'Small Forward', PF: 'Power Forward'};
-  const CLS = {FR: 'Freshman', SO: 'Sophomore', JR: 'Junior', SR: 'Senior', 9: 'Freshman', 10: 'Sophomore', 11: 'Junior', 12: 'Senior'};
   draft = {
-    type: 'player', side: team, title: player.name, number: player.num || '',
-    kicker: POS[(player.pos || '').toUpperCase()] || player.pos || L().teams[team].name,
-    subtitle: [L().teams[team].name, CLS[String(player.cls || '').toUpperCase().replace('.', '')] || player.cls].filter(Boolean).join(' · '),
+    ...playerBase(player, team, L().teams),
     stat: statLine(stats.sport, entry?.line) || 'Tonight',
-    photo: await photoData(player.photo), image: '', rows: [],
+    photo: await photoData(player.photo), image: '',
   };
   loadDraftForm();
   local.set('draft', draft);
@@ -498,6 +497,146 @@ byId('loadCompare').onclick = () => {
   loadDraftForm();
   local.set('draft', draft);
 };
+
+// ── Stat graphics tab ───────────────────────────────────────────────────────
+// Pick a player (or a team graphic), see it in the preview with the numbers
+// already filled in, then Take. The numbers are copied into the on-air
+// graphic at the moment of Take, so they don't change while it's up.
+let sgPlayer = local.get('sgPlayer', null); // {team, id}
+let sgPick = null;                           // {scope: 'player'|'team', key, team, id}
+const sgPhotos = new Map();
+let sgKey = '';
+
+function sgPhoto(ref) {
+  if (!ref) return '';
+  if (validImage(ref)) return ref;
+  if (sgPhotos.has(ref)) return sgPhotos.get(ref);
+  sgPhotos.set(ref, '');
+  photoData(ref).then(data => { if (data) { sgPhotos.set(ref, data); renderStatGraphics(true); } });
+  return '';
+}
+const sgPeriod = () => L().games.basketball.period;
+const sgRoster = (team, id) => statsDoc.doc?.teams[team]?.players.find(p => p.id === id);
+
+function sgItems(scope, team, id) {
+  const stats = statsDoc.doc;
+  if (scope === 'team') return teamGraphics({stats, teams: L().teams, period: sgPeriod()});
+  const player = sgRoster(team, id);
+  if (!player) return [];
+  return playerGraphics({stats, teams: L().teams, team, playerId: id, period: sgPeriod(), photo: sgPhoto(player.photo)});
+}
+const sgFind = pick => pick && sgItems(pick.scope, pick.team, pick.id).find(item => item.key === pick.key);
+const sgName = pick => {
+  const player = pick?.scope === 'player' && sgRoster(pick.team, pick.id);
+  return player ? `#${player.num} ${player.name}`.trim() : '';
+};
+
+function sgSendPreview() {
+  const item = sgFind(sgPick);
+  byId('sgPreview').contentWindow?.postMessage({studioPreview: item?.graphic || null}, location.origin);
+  const picked = byId('sgPicked');
+  if (item) {
+    const who = sgName(sgPick);
+    picked.innerHTML = `${esc(who ? `${who} · ${item.label}` : item.label)}<small>${esc(item.text)}</small>`;
+  } else picked.textContent = 'Pick a graphic below';
+  byId('sgTake').disabled = !item;
+  byId('sgEdit').disabled = !item;
+}
+
+function sgList(element, items, scope, team, id, empty) {
+  if (!items.length) { element.innerHTML = `<p class="empty">${esc(empty)}</p>`; return; }
+  element.innerHTML = items.map(item => {
+    const selected = sgPick && sgPick.scope === scope && sgPick.key === item.key && (scope === 'team' || (sgPick.team === team && sgPick.id === id));
+    return `<div class="sgItem ${selected ? 'sel' : ''}" data-key="${esc(item.key)}" role="button" tabindex="0" aria-pressed="${Boolean(selected)}">
+      <div class="what"><small>${esc(item.label)}</small><strong>${esc(item.text)}</strong></div><button type="button" class="primary" data-take>Take</button></div>`;
+  }).join('');
+  $$('.sgItem', element).forEach(row => {
+    const pick = {scope, key: row.dataset.key, team, id};
+    const choose = () => { sgPick = pick; renderStatGraphics(true); };
+    row.onclick = choose;
+    row.onkeydown = event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); choose(); } };
+    $('[data-take]', row).onclick = event => { event.stopPropagation(); sgPick = pick; renderStatGraphics(true); sgTake(pick); };
+  });
+}
+
+function renderStatGraphics(force = false) {
+  if (!liveDoc.ready || !statsDoc.ready) return;
+  const stats = statsDoc.doc;
+  const hoops = stats.sport === 'basketball';
+  byId('sgNotice').hidden = hoops;
+  byId('sgBody').hidden = !hoops;
+  if (!hoops) {
+    setText('sgNoticeText', 'Stat graphics are for basketball for now. Switch the stat keeper to basketball to use them.');
+    return;
+  }
+  if (byId('tab-statgfx').hidden && !force) return;
+  const teams = L().teams;
+  const photosReady = [...sgPhotos.values()].filter(Boolean).length;
+  const key = JSON.stringify([statsDoc.packet.session, statsDoc.packet.revision, teams.map(t => [t.name, t.short, t.color]), sgPeriod(), sgPlayer, sgPick, photosReady]);
+  if (!force && key === sgKey) return;
+  sgKey = key;
+
+  setText('sgInfo', `${stats.events.length} plays logged${L().sport !== 'basketball' ? ' · scorebug is on football' : ''}`);
+  if (sgPlayer && !sgRoster(sgPlayer.team, sgPlayer.id)) { sgPlayer = null; local.set('sgPlayer', null); }
+  if (sgPick?.scope === 'player' && !sgRoster(sgPick.team, sgPick.id)) sgPick = null;
+
+  const box = boxScore('basketball', stats);
+  byId('sgPlayers').innerHTML = [0, 1].map(team => {
+    const players = stats.teams[team]?.players || [];
+    const pts = id => box.teams[team].players.find(p => p.player.id === id)?.line.pts ?? 0;
+    return `<div class="sgTeam" style="--c:${esc(teams[team].color)}"><h3>${esc(teams[team].name)}</h3><div class="chips">${players.length
+      ? players.map(p => `<button type="button" data-team="${team}" data-id="${esc(p.id)}" aria-pressed="${sgPlayer?.team === team && sgPlayer?.id === p.id}"><b>${esc(p.num)}</b><span>${esc(p.name)}</span><small>${pts(p.id)}</small></button>`).join('')
+      : '<span class="muted">No roster yet. Add players in the stat keeper.</span>'}</div></div>`;
+  }).join('');
+  $$('#sgPlayers [data-id]').forEach(b => {
+    b.onclick = () => {
+      sgPlayer = {team: Number(b.dataset.team), id: b.dataset.id};
+      local.set('sgPlayer', sgPlayer);
+      sgPick = {scope: 'player', key: 'line', ...sgPlayer};
+      renderStatGraphics(true);
+    };
+  });
+
+  const player = sgPlayer && sgRoster(sgPlayer.team, sgPlayer.id);
+  setText('sgPlayerTitle', player ? `#${player.num} ${player.name}`.trim() : 'Player graphics');
+  sgList(byId('sgPlayerList'), player ? sgItems('player', sgPlayer.team, sgPlayer.id) : [], 'player', sgPlayer?.team, sgPlayer?.id,
+    player ? 'No stats for this player yet.' : 'Tap a player to see their graphics.');
+  sgList(byId('sgTeamList'), sgItems('team'), 'team', undefined, undefined, 'Team graphics show up once plays are logged.');
+  sgSendPreview();
+}
+
+async function sgTake(pick) {
+  await statsDoc.poll(); // newest numbers before locking them in
+  let item = sgFind(pick);
+  if (item && pick.scope === 'player') {
+    const ref = sgRoster(pick.team, pick.id)?.photo;
+    if (ref && !validImage(ref) && !sgPhotos.get(ref)) {
+      const data = await photoData(ref);
+      if (data) sgPhotos.set(ref, data);
+      item = sgFind(pick);
+    }
+  }
+  if (!item) { toast('That graphic isn’t available anymore. The stats changed.', 'error'); renderStatGraphics(true); return; }
+  const seconds = Number(byId('sgSeconds').value) || 0;
+  local.set('sgSeconds', seconds);
+  const who = sgName(pick);
+  change(d => { d.graphic = {...item.graphic, id: uid(), until: seconds > 0 ? serverNow() + seconds * 1000 : 0}; },
+    `${who ? who + ' · ' : ''}${item.label} is live`);
+}
+
+byId('sgSeconds').value = local.get('sgSeconds', 8) || '';
+byId('sgTake').onclick = () => { if (sgPick) sgTake(sgPick); };
+byId('sgClear').onclick = () => clearGraphic();
+byId('sgEdit').onclick = () => {
+  const item = sgFind(sgPick);
+  if (!item) return;
+  draft = {kicker: '', subtitle: '', number: '', stat: '', photo: '', image: '', rows: [], ...copy(item.graphic)};
+  loadDraftForm();
+  local.set('draft', draft);
+  setTab('graphics');
+  toast('Loaded into the Graphics tab. Edit it, then take it live.');
+};
+byId('sgPreview').addEventListener('load', () => setTimeout(sgSendPreview, 300));
 
 // ── Ticker tab ──────────────────────────────────────────────────────────────
 let tickerDirty = false;
@@ -1045,6 +1184,7 @@ function render() {
   else options(byId('gSide'), sideOptions());
   if (!teamsDirty) renderTeamEditors();
   renderStatsLinks();
+  renderStatGraphics();
   renderFeed();
   if (!byId('serMap').tBodies[0].children.length || byId('serMap').dataset.sport !== L().sport) {
     byId('serMap').dataset.sport = L().sport;
@@ -1073,6 +1213,9 @@ byId('signOut').onclick = signOut;
     setTab(local.get('tab', 'live'));
     const url = overlayUrl(overlayKey);
     byId('preview').src = url;
+    const previewUrl = new URL(overlayUrl(overlayKey, 'bug,graphic'));
+    previewUrl.searchParams.set('preview', '1');
+    byId('sgPreview').src = previewUrl.href;
     byId('openOverlay').href = url;
     byId('copyOverlayTop').onclick = () => copyText(url, 'OBS overlay URL');
     renderObsLinks();
