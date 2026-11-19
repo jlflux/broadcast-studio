@@ -2,7 +2,7 @@
 // URL: /overlay?layers=bug,banner,graphic,ticker#key=<overlay key>
 // Leave out `layers` to show everything; list some to split them into
 // separate OBS sources.
-import {byId, clamp, clockText, mix, readable, remaining, running, setTeamColors, setText, shade, validImage, esc} from './common.js';
+import {byId, clamp, clockText, mix, photoPosition, readable, remaining, running, setTeamColors, setText, shade, validImage, esc} from './common.js';
 import {createTicker} from './ticker-layer.js';
 
 const params = new URLSearchParams(location.search);
@@ -278,7 +278,7 @@ function graphicContent(graphic, teams) {
     const hasPhoto = validImage(graphic.photo);
     const photo = node('photo');
     if (hasPhoto) {
-      const img = document.createElement('img'); img.alt = ''; img.src = graphic.photo; photo.append(img);
+      const img = document.createElement('img'); img.alt = ''; img.src = graphic.photo; img.style.objectPosition = photoPosition(graphic.photoPos); photo.append(img);
     } else if (graphic.number) photo.append(node('num', '#' + graphic.number));
     else card.classList.add('noPhoto');
     if (hasPhoto || graphic.number) card.append(photo);

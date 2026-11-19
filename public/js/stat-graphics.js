@@ -5,6 +5,7 @@
 // choice selected while stats come in and rebuild it at the moment of Take.
 // Basketball only for now.
 import {boxScore, compareRows, lineScore, points} from './stats-engine.js';
+import {photoPosition} from './common.js';
 
 export const POSITIONS = {QB: 'Quarterback', RB: 'Running Back', WR: 'Wide Receiver', TE: 'Tight End', LB: 'Linebacker', DB: 'Defensive Back',
   DL: 'Defensive Line', OL: 'Offensive Line', K: 'Kicker', P: 'Punter', CB: 'Cornerback', S: 'Safety', DE: 'Defensive End', DT: 'Defensive Tackle',
@@ -60,7 +61,7 @@ export function playerBase(player, team, teams) {
   return {
     type: 'player', side: team, title: cut(player.name, 90), number: player.num || '',
     kicker: POSITIONS[(player.pos || '').toUpperCase()] || player.pos || teamName,
-    subtitle: [teamName, cls].filter(Boolean).join(' · '), rows: [],
+    subtitle: [teamName, cls].filter(Boolean).join(' · '), rows: [], photoPos: photoPosition(player.photoPos),
   };
 }
 

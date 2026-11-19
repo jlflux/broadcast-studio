@@ -61,6 +61,12 @@
   </section>
 </main>
 <dialog id="playDialog"><form method="dialog" id="playForm"><h2 id="playTitle"></h2><div id="playFields" class="stack"></div><div class="row"><button value="cancel" formnovalidate>Cancel</button><button value="ok" class="primary" id="playSave">Save play</button></div></form></dialog>
+<dialog id="photoDialog"><form method="dialog"><h2 id="photoTitle">Player photo</h2>
+  <div class="photoEdit"><div class="photoSquare"><img id="photoImg" alt=""></div>
+    <div class="stack"><label>Up/down<select id="photoY"></select></label><label>Left/right<select id="photoX"></select></label>
+      <p class="hint" style="margin:0">Graphics always show the photo as a square. If it gets cut off, pick which part to keep.</p></div></div>
+  <div class="row"><label class="ghost" style="cursor:pointer">Replace photo<input type="file" accept="image/*" hidden id="photoReplace"></label><button type="button" class="ghost" id="photoRemove">Remove photo</button><button value="ok" class="primary">Done</button></div>
+</form></dialog>
 <dialog id="confirmDialog"><form method="dialog"><h2 id="confirmTitle"></h2><p class="muted" id="confirmText"></p><div class="row"><button value="cancel">Cancel</button><button value="ok" class="danger" id="confirmOk">OK</button></div></form></dialog>
 </body>
 </html>

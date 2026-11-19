@@ -133,6 +133,11 @@
               <label><span id="gImageLabel">Photo</span><input id="gImage" type="file" accept="image/png,image/jpeg,image/webp"></label>
               <div class="row" style="align-self:end"><img id="gImagePreview" alt="" hidden><span class="muted" id="gImageStatus">No image</span><button type="button" class="ghost" id="gImageClear">Remove</button></div>
             </div>
+            <div class="grid3 gPhotoPos" hidden>
+              <label>Photo up/down<select id="gPhotoY"></select></label>
+              <label>Photo left/right<select id="gPhotoX"></select></label>
+              <p class="hint" style="align-self:end;margin:0">The photo always shows as a square. Pick which part to keep if it gets cut off.</p>
+            </div>
             <fieldset id="gRowsBox"><legend>Rows</legend><div id="gRows"></div><button type="button" class="ghost" id="gAddRow">+ Add row</button></fieldset>
             <div class="between">
               <div class="row"><button class="primary big">Take graphic live</button><label class="check">Auto-clear after <input id="gSeconds" type="number" min="0" max="120" style="width:64px;display:inline-block"> sec</label></div>
