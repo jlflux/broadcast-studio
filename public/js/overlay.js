@@ -72,10 +72,14 @@ function teamMarkup(i, layout) {
   if (layout === 'ribbon') {
     return `<div class="team ${side}" id="team${i}"><div class="plate">${name}<div class="sub"><div class="ticks" data-f="timeouts"></div>${fouls}</div></div>${mark}<div class="score" data-f="score"></div><span class="poss" data-f="poss"></span></div>`;
   }
-  return `<div class="team ${side}" id="team${i}"><div class="trow">${name}</div>${mark}<div class="score" data-f="score"></div><div class="meta"><div class="ticks" data-f="timeouts"></div></div>${fouls}<span class="poss" data-f="poss"></span></div>`;
+  return `<div class="team ${side}" id="team${i}"><div class="trow">${name}</div>${mark}<div class="score" data-f="score"></div><div class="meta"><div class="ticks" data-f="timeouts"></div></div><span class="poss" data-f="poss"></span></div>`;
 }
 
-function bugMarkup(layout) {
+// Possession arrows that sit inside the dark clock area, pointing at the team.
+const ARROWS = ['<span class="parrow left" id="possLeft"></span>', '<span class="parrow right" id="possRight"></span>'];
+const centerFouls = () => [0, 1].map(i => `<div class="cfoul" id="cfoul${i}"><div class="fouls" data-f="foulsBox"><span data-f="fouls"></span><span class="bonus" data-f="bonus">BONUS</span></div></div>`).join('');
+
+function bugMarkup(layout, sport) {
   const timing = `<span class="period" id="period"></span><span class="clock" id="clock"></span><span class="aux" id="aux"></span>`;
   if (layout === 'corner') {
     return `${teamMarkup(0, layout)}${teamMarkup(1, layout)}<div class="foot">${timing}<span class="situation" id="situation"></span></div>`;
@@ -84,14 +88,16 @@ function bugMarkup(layout) {
     return `${teamMarkup(0, layout)}${teamMarkup(1, layout)}<div class="center" id="center"><span class="parrow left" id="possLeft"></span><div class="timing">${timing}</div><div class="situation" id="situation"></div><span class="parrow right" id="possRight"></span></div>`;
   }
   if (layout === 'ribbon') {
-    return `${teamMarkup(0, layout)}<div class="center" id="center"><div class="timing">${timing}</div><div class="situation" id="situation"></div></div>${teamMarkup(1, layout)}`;
+    return `${teamMarkup(0, layout)}<div class="center" id="center"><div class="timing">${ARROWS[0]}${timing}${ARROWS[1]}</div><div class="situation" id="situation"></div></div>${teamMarkup(1, layout)}`;
   }
-  return `${teamMarkup(0, layout)}<div class="center" id="center"><div class="situation" id="situation"></div><div class="timing">${timing}</div></div>${teamMarkup(1, layout)}`;
+  // Broadcast: basketball team fouls sit along the bottom of the clock area,
+  // each on its team's side, so the logos keep their full size.
+  return `${teamMarkup(0, layout)}<div class="center" id="center"><div class="situation" id="situation"></div><div class="timing">${ARROWS[0]}${timing}${ARROWS[1]}</div>${sport === 'basketball' ? `<div class="cfouls">${centerFouls()}</div>` : ''}</div>${teamMarkup(1, layout)}`;
 }
 
 let bugShape = '';
 let lastScores = null;
-const field = (i, name) => byId('team' + i).querySelector(`[data-f="${name}"]`);
+const field = (i, name) => byId('team' + i).querySelector(`[data-f="${name}"]`) || byId('cfoul' + i)?.querySelector(`[data-f="${name}"]`);
 
 function paintBug() {
   const bug = byId('bug');
@@ -101,7 +107,7 @@ function paintBug() {
   if (shape !== bugShape) {
     bugShape = shape;
     bug.className = `bug ${style.layout} ${sport}`;
-    bug.innerHTML = bugMarkup(style.layout);
+    bug.innerHTML = bugMarkup(style.layout, sport);
     lastScores = null;
   }
   const show = live.bugVisible && layers.has('bug');
@@ -158,8 +164,9 @@ function paintBug() {
     }
     ticks.hidden = total === 0;
     const isHoops = sport === 'basketball';
-    field(i, 'foulsBox').hidden = !isHoops;
-    if (isHoops) {
+    const foulsBox = field(i, 'foulsBox'); // not every layout shows team fouls for football
+    if (foulsBox) foulsBox.hidden = !isHoops;
+    if (isHoops && foulsBox) {
       setText(field(i, 'fouls'), style.layout === 'ribbon' || style.layout === 'badge' ? `${game.fouls[i]} FOULS` : `FOULS ${game.fouls[i]}`);
       field(i, 'bonus').hidden = game.fouls[1 - i] < settings.bonusAt;
     }

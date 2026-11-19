@@ -35,7 +35,7 @@ html,body{width:100%;height:100%;margin:0;overflow:hidden;background:transparent
 .poss{position:absolute;width:0;height:0;border:9px solid transparent;opacity:0;transition:opacity .2s}
 .poss.on{opacity:1}
 .period,.clock,.aux{font-weight:800;font-variant-numeric:tabular-nums;white-space:nowrap}
-.aux{display:grid;place-items:center;line-height:1;padding-top:1px;background:#0006;border:2px solid var(--aux,#ffffff44);border-radius:5px;min-width:56px}
+.aux{display:grid;place-items:center;line-height:1;padding:0 0 .1em;background:#0006;border:2px solid var(--aux,#ffffff44);border-radius:5px;min-width:56px}
 .aux.low{color:#ffcb63}
 .clock.stopped{opacity:.92}
 
@@ -55,29 +55,36 @@ html,body{width:100%;height:100%;margin:0;overflow:hidden;background:transparent
 .broadcast .mark img{max-height:76px}
 .mark img.backed{background:#fff;border-radius:50%;padding:6px}
 .short{font-weight:800;font-size:34px;letter-spacing:.03em}
-.broadcast.basketball .mark{grid-row:2;padding-bottom:2px}
-.broadcast.basketball .mark img{max-height:62px}
-.broadcast .fouls{grid-row:3;grid-column:1;justify-content:center;font-size:17px;padding-bottom:4px}
-.broadcast .right .fouls{grid-column:2}
 .broadcast .score{grid-row:1/span 2;grid-column:2;align-self:center;font-size:108px;line-height:92px;padding-top:6px;border-radius:6px}
 .broadcast .right .score{grid-column:1}
 .broadcast .score.wide{font-size:88px}
 .broadcast .meta{grid-row:3;grid-column:2;padding:2px 26px 0;align-self:start}
 .broadcast .right .meta{grid-column:1}
-.broadcast .poss{top:50%;margin-top:-9px;right:-1px;border-right-color:var(--poss)}
-.broadcast .right .poss{right:auto;left:-1px;border-right-color:transparent;border-left-color:var(--poss)}
-.broadcast .center{display:grid;grid-template-rows:52px 1fr;background:linear-gradient(#05080d 45%,var(--dark-hi,#1d2633))}
-.broadcast .center.nosit{grid-template-rows:1fr}
+.broadcast .poss{display:none}
+.broadcast .center{display:grid;grid-template-rows:52px 1fr auto;background:linear-gradient(#05080d 45%,var(--dark-hi,#1d2633))}
+.broadcast .center.nosit{grid-template-rows:1fr auto}
 .broadcast .situation{margin:5px 6px 0;border-radius:7px;display:grid;place-items:center;font-weight:800;font-size:34px;white-space:nowrap;overflow:hidden;text-transform:uppercase;background:linear-gradient(180deg,var(--sit,#2a3442),var(--sit-dark,#1d242e));color:var(--sit-ink,#fff)}
 .broadcast .situation.compact{font-size:25px}
 .broadcast .nosit .situation{display:none}
-.broadcast .timing{display:flex;align-items:center;justify-content:space-evenly;gap:8px;padding:0 10px}
-.broadcast .period{font-size:36px;border-right:3px solid #ffffff88;padding-right:12px;text-transform:uppercase}
-.broadcast .clock{font-size:46px}
-.broadcast .aux{font-size:32px;height:52px}
-.broadcast .nosit .period{font-size:44px}
-.broadcast .nosit .clock{font-size:60px}
-.broadcast .nosit .aux{font-size:40px;height:62px;min-width:70px}
+.broadcast .timing{display:flex;align-items:center;justify-content:center;gap:8px;padding:0 9px;min-width:0}
+.broadcast .period{font-size:32px;border-right:3px solid #ffffff88;padding-right:10px;text-transform:uppercase}
+.broadcast .clock{font-size:44px}
+.broadcast .aux{font-size:30px;height:48px;min-width:52px}
+.broadcast .nosit .period{font-size:34px}
+.broadcast .nosit .clock{font-size:50px}
+/* Possession arrows (both layouts that use them): inside the dark clock area,
+   pushed to its edges and pointing at the team. */
+.broadcast .parrow,.ribbon .parrow{flex:0 0 auto;width:0;height:0;border-top:13px solid transparent;border-bottom:13px solid transparent;opacity:0;transition:opacity .25s}
+.broadcast .parrow.left,.ribbon .parrow.left{border-right:14px solid var(--poss);margin-right:auto}
+.broadcast .parrow.right,.ribbon .parrow.right{border-left:14px solid var(--poss);margin-left:auto}
+.broadcast .parrow.on,.ribbon .parrow.on{opacity:1}
+.broadcast .cfouls{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:0 12px 8px}
+.broadcast .cfoul{display:flex;min-width:0}
+.broadcast #cfoul1{justify-content:flex-end}
+.broadcast #cfoul1 .fouls{flex-direction:row-reverse}
+.broadcast .cfoul .fouls{font-size:17px;color:#ffffffd8}
+.broadcast .cfoul .bonus{font-size:14px}
+.broadcast .nosit .aux{font-size:32px;height:52px;min-width:56px}
 
 /* Corner: compact box, one row per team and a footer. */
 .bug.corner{width:460px;border-radius:10px;overflow:hidden;background:var(--dark)}
@@ -133,13 +140,14 @@ html,body{width:100%;height:100%;margin:0;overflow:hidden;background:transparent
 .ribbon .score.wide{font-size:52px}
 .ribbon .left .score{clip-path:polygon(0 0,100% 0,calc(100% - 16px) 100%,0 100%);padding-right:12px}
 .ribbon .right .score{clip-path:polygon(0 0,100% 0,100% 100%,16px 100%);padding-left:12px}
-.ribbon .poss{bottom:0;top:auto;border:0;width:62px;height:5px;background:var(--poss);border-radius:3px 3px 0 0}
-.ribbon .left .poss{right:30px}
-.ribbon .right .poss{left:30px}
+.ribbon .poss{display:none}
 .ribbon .center{margin:0 -12px;position:relative;z-index:1;display:flex;flex-direction:column;justify-content:center;clip-path:polygon(16px 0,calc(100% - 16px) 0,100% 100%,0 100%);background:linear-gradient(180deg,var(--dark-hi,#1d2633),var(--dark))}
-.ribbon .timing{display:flex;align-items:center;justify-content:center;gap:10px;padding:0 24px}
+.ribbon .timing{display:flex;align-items:center;justify-content:center;gap:8px;padding:0 20px}
+.ribbon .parrow{border-top-width:10px;border-bottom-width:10px}
+.ribbon .parrow.left{border-right-width:11px}
+.ribbon .parrow.right{border-left-width:11px}
 .ribbon .period{font-size:22px;color:#ffffffc8;text-transform:uppercase}
-.ribbon .clock{font-size:42px;line-height:1}
+.ribbon .clock{font-size:38px;line-height:1}
 .ribbon .aux{font-size:22px;height:30px;min-width:38px;border-width:2px}
 .ribbon .situation{align-self:center;margin-top:3px;padding:0 10px;border-radius:4px;font-weight:800;font-size:17px;line-height:22px;text-transform:uppercase;white-space:nowrap;background:var(--sit,#2a3442);color:var(--sit-ink,#fff)}
 .ribbon .situation:empty{display:none}
