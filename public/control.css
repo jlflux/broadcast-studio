@@ -83,4 +83,4 @@ legend{font-size:12px;color:#c1cddb;padding:0 4px}
 .sgItem .what strong{display:block;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .sgList .empty{color:var(--sub);font-size:12px}
 @media(max-width:1100px){.sgGrid{grid-template-columns:1fr}}
-#gImagePreview.square{width:64px;height:64px;max-width:none;object-fit:cover}
+#gImagePreview.square{width:58px;height:64px;max-width:none;object-fit:cover}
