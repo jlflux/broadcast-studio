@@ -81,6 +81,15 @@ export function validImage(value) {
     /^data:image\/(png|jpeg|webp|gif|svg\+xml);base64,[A-Za-z0-9+/=]+$/.test(value));
 }
 
+// Player photos always show in a square. The photo itself is never cropped;
+// photoPos says which part of it shows: "<left|center|right> <top|center|bottom>".
+export const PHOTO_X = [['left', 'Left'], ['center', 'Center'], ['right', 'Right']];
+export const PHOTO_Y = [['top', 'Top'], ['center', 'Center'], ['bottom', 'Bottom']];
+export function photoPosition(value) {
+  const [x, y] = String(value || '').split(' ');
+  return `${PHOTO_X.some(([v]) => v === x) ? x : 'center'} ${PHOTO_Y.some(([v]) => v === y) ? y : 'top'}`;
+}
+
 // Read an image file and shrink it so it stays small enough to sync quickly.
 export function readImage(file, {maxWidth = 320, maxHeight = 320, type = 'image/png', quality = 0.86} = {}) {
   return new Promise((resolve, reject) => {

@@ -1,5 +1,5 @@
 import {$, $$, byId, clamp, clockText, copy, Doc, esc, getSession, hexColor, onConnection, overlayUrl, parseClock, readImage,
-  readable, remaining, running, serverNow, setText, shade, signOut, toast, uid, validImage, download} from './common.js';
+  PHOTO_X, PHOTO_Y, photoPosition, readable, remaining, running, serverNow, setText, shade, signOut, toast, uid, validImage, download} from './common.js';
 import {freshGame} from './defaults.js';
 import {LEAGUES} from './ticker-layer.js';
 import {boxScore, compareRows, score as statsScore, statLine} from './stats-engine.js';
@@ -356,6 +356,12 @@ function loadDraftForm() {
   const image = type === 'player' ? draft.photo : draft.image;
   byId('gImagePreview').hidden = !validImage(image);
   if (validImage(image)) byId('gImagePreview').src = image;
+  const [photoX, photoY] = photoPosition(draft.photoPos).split(' ');
+  $('.gPhotoPos').hidden = type !== 'player' || !validImage(draft.photo);
+  byId('gImagePreview').classList.toggle('square', type === 'player');
+  byId('gImagePreview').style.objectPosition = type === 'player' ? photoPosition(draft.photoPos) : '';
+  options(byId('gPhotoX'), PHOTO_X, photoX);
+  options(byId('gPhotoY'), PHOTO_Y, photoY);
   setText('gImageStatus', validImage(image) ? '' : 'No image');
   byId('gRows').replaceChildren(...(draft.rows || []).map(rowEditor));
   setText($('#gRowsBox legend'), type === 'compare' ? 'Stat rows (left team · label · right team)' : 'Rows (label · value, optional)');
@@ -373,6 +379,11 @@ $$('#graphicType [data-type]').forEach(b => {
   };
 });
 byId('graphicForm').oninput = () => readDraftForm();
+['gPhotoX', 'gPhotoY'].forEach(id => byId(id).addEventListener('change', () => {
+  draft.photoPos = `${byId('gPhotoX').value} ${byId('gPhotoY').value}`;
+  local.set('draft', draft);
+  loadDraftForm();
+}));
 byId('gAddRow').onclick = () => {
   if ($$('.gRowEdit').length >= 6) { toast('Six rows at most.', 'error'); return; }
   byId('gRows').append(rowEditor());
@@ -380,8 +391,8 @@ byId('gAddRow').onclick = () => {
 byId('gImage').onchange = async event => {
   try {
     const isPhoto = draft.type === 'player';
-    const data = await readImage(event.target.files[0], isPhoto ? {maxWidth: 340, maxHeight: 420, type: 'image/jpeg', quality: 0.84} : {maxWidth: 360, maxHeight: 180});
-    if (isPhoto) draft.photo = data; else draft.image = data;
+    const data = await readImage(event.target.files[0], isPhoto ? {maxWidth: 420, maxHeight: 420, type: 'image/jpeg', quality: 0.84} : {maxWidth: 360, maxHeight: 180});
+    if (isPhoto) { draft.photo = data; draft.photoPos = 'center top'; } else draft.image = data;
     local.set('draft', draft);
     loadDraftForm();
   } catch (error) { fail(error); }
@@ -391,7 +402,7 @@ byId('gImageClear').onclick = () => { if (draft.type === 'player') draft.photo =
 
 function graphicFromDraft(source = draft) {
   const graphic = {type: source.type, title: source.title.slice(0, 90), kicker: source.kicker || '', subtitle: source.subtitle || '', side: source.side ?? -1, rows: (source.rows || []).slice(0, 6)};
-  if (source.type === 'player') Object.assign(graphic, {number: source.number || '', stat: source.stat || '', photo: source.photo || ''});
+  if (source.type === 'player') Object.assign(graphic, {number: source.number || '', stat: source.stat || '', photo: source.photo || '', photoPos: photoPosition(source.photoPos)});
   if (source.type === 'message') graphic.image = source.image || '';
   return graphic;
 }

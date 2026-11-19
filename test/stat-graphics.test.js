@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import {photoPosition} from '../public/js/common.js';
 import {currentRun, gameKicker, periodName, playerGraphics, statPeriod, teamGraphics} from '../public/js/stat-graphics.js';
 
 const teams = [
@@ -60,6 +61,7 @@ test('player graphics fill in the numbers', () => {
   assert.equal(g.kicker, 'Guard');
   assert.equal(g.subtitle, 'Demo Hawks · Senior');
   assert.equal(g.stat, '2 three-pointers · 2 of 3');
+  assert.equal(g.photoPos, 'center top', 'photos default to showing the top of the picture');
 
   const flint = Object.fromEntries(playerGraphics({stats, teams, team: 1, playerId: 'flint', period: '2nd'}).map(i => [i.key, i.text]));
   assert.equal(flint.ft, '1 of 2 at the line');
@@ -103,4 +105,23 @@ test('team graphics', () => {
   assert.equal(run.graphic.title, '8-0 Run');
   assert.equal(run.graphic.side, 1);
   assert.equal(teamGraphics({stats: {...stats, events: []}, teams, period: '1st'}).length, 0);
+});
+
+test('photo alignment', () => {
+  assert.equal(photoPosition(''), 'center top');
+  assert.equal(photoPosition('left bottom'), 'left bottom');
+  assert.equal(photoPosition('right center'), 'right center');
+  assert.equal(photoPosition('sideways up'), 'center top');
+  const roster = {...stats, teams: [{players: [{id: 'p', num: '5', name: 'O. Frost', photoPos: 'left bottom'}]}, {players: []}]};
+  assert.equal(playerGraphics({stats: roster, teams, team: 0, playerId: 'p', period: '1st'})[0].graphic.photoPos, 'left bottom');
+});
+
+test('server accepts photo alignment on a graphic and rejects junk', async () => {
+  const {validLive} = await import('../lib/validate.js');
+  const {defaultLive} = await import('../lib/defaults.js');
+  const live = defaultLive();
+  const graphic = {type: 'player', title: 'O. Frost', side: 0, photo: '', rows: []};
+  assert.equal(validLive({...live, graphic: {...graphic, photoPos: 'left bottom'}}), true);
+  assert.equal(validLive({...live, graphic}), true);
+  assert.equal(validLive({...live, graphic: {...graphic, photoPos: 'url(evil)'}}), false);
 });

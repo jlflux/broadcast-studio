@@ -1,4 +1,4 @@
-import {$, $$, byId, clockText, copy, Doc, download, esc, getSession, onConnection, readImage, remaining, serverNow, setText, toast, uid, validImage} from './common.js';
+import {$, $$, byId, clockText, copy, Doc, download, esc, getSession, onConnection, PHOTO_X, PHOTO_Y, photoPosition, readImage, remaining, serverNow, setText, toast, uid, validImage} from './common.js';
 import {boxScore, compareRows, describe, lineScore, parseRoster, points, score, statLine, teamFouls} from './stats-engine.js';
 import {defaultStats} from './defaults.js';
 
@@ -350,7 +350,7 @@ function renderRosters(force = false) {
         <div class="row"><select data-lib>${saved.length ? saved.map(r => `<option value="${esc(r.id)}">${esc(r.name)} (${r.players.length})</option>`).join('') : '<option value="">No saved rosters</option>'}</select><button type="button" data-load>Load</button><button type="button" data-save>Save roster</button></div></header>
       <label>Paste a roster (one player per line: "12 John Smith QB Sr", or CSV with a header)<textarea data-paste placeholder="7 Marcus Hill QB Sr&#10;1 Dee Carter WR Jr"></textarea></label>
       <div class="row" style="margin-top:8px"><button type="button" class="primary" data-add>Add pasted players</button><label class="ghost" style="cursor:pointer">Import PDF or CSV…<input type="file" data-file accept=".pdf,.csv,.txt,application/pdf,text/csv,text/plain" hidden></label><button type="button" data-one>+ Add one</button><button type="button" class="ghost" data-clear>Clear roster</button></div>
-      <div class="rosterList">${players.map(p => `<div class="rosterRow" data-id="${esc(p.id)}"><label class="thumb" title="Add photo">${'＋'}<input type="file" accept="image/*" hidden data-photo></label>
+      <div class="rosterList">${players.map(p => `<div class="rosterRow" data-id="${esc(p.id)}">${p.photo ? `<button type="button" class="thumb" title="Photo and alignment" data-thumb></button>` : `<label class="thumb" title="Add photo">＋<input type="file" accept="image/*" hidden data-photo></label>`}
         <input data-k="num" value="${esc(p.num)}" maxlength="3" placeholder="#"><input data-k="name" value="${esc(p.name)}" maxlength="40" placeholder="Name"><input data-k="pos" value="${esc(p.pos || '')}" maxlength="6" placeholder="Pos"><input data-k="cls" value="${esc(p.cls || '')}" maxlength="10" placeholder="Yr"><button type="button" class="ghost" data-del aria-label="Remove">✕</button></div>`).join('')}</div>`;
     $('[data-add]', card).onclick = () => addPlayers(team, parseRoster($('[data-paste]', card).value));
     $('[data-one]', card).onclick = () => statsDoc.commit(s => { s.teams[team].players.push({id: uid(), num: '', name: 'New player', pos: '', cls: '', photo: ''}); }).then(() => renderRosters(true)).catch(fail);
@@ -383,8 +383,15 @@ function renderRosters(force = false) {
     $$('.rosterRow', card).forEach(row => {
       const id = row.dataset.id;
       const player = players.find(p => p.id === id);
-      if (player.photo) photo(player.photo).then(src => { if (src) $('.thumb', row).innerHTML = `<img src="${esc(src)}" alt=""><input type="file" accept="image/*" hidden data-photo>`; bindPhoto(row, team, id); });
-      bindPhoto(row, team, id);
+      if (player.photo) {
+        photo(player.photo).then(src => {
+          if (!src) return;
+          const img = document.createElement('img');
+          img.src = src; img.alt = ''; img.style.objectPosition = photoPosition(player.photoPos);
+          $('.thumb', row).replaceChildren(img);
+        });
+        $('[data-thumb]', row).onclick = () => openPhoto(team, id);
+      } else bindPhoto(row, team, id);
       $$('[data-k]', row).forEach(input => {
         input.onchange = () => statsDoc.commit(s => { const p = s.teams[team].players.find(x => x.id === id); if (p) p[input.dataset.k] = input.value.trim(); }).catch(fail);
       });
@@ -393,20 +400,62 @@ function renderRosters(force = false) {
     return card;
   }));
 }
+// Saves a new photo for a player. The whole photo is kept (only shrunk), so
+// the square crop can be moved later with the alignment choices.
+async function savePhoto(file, team, id) {
+  const data = await readImage(file, {maxWidth: 420, maxHeight: 420, type: 'image/jpeg', quality: 0.84});
+  const key = 'photo:' + uid();
+  const doc = new Doc(key);
+  doc.packet = {session: statsDoc.packet.session, revision: 0, doc: {}};
+  await doc.commit(d => { d.data = data; });
+  photos.set(key, data);
+  await statsDoc.commit(s => { const p = s.teams[team].players.find(x => x.id === id); if (p) { p.photo = key; p.photoPos = 'center top'; } });
+  renderRosters(true);
+}
 function bindPhoto(row, team, id) {
   $('[data-photo]', row).onchange = async event => {
     try {
-      const data = await readImage(event.target.files[0], {maxWidth: 340, maxHeight: 420, type: 'image/jpeg', quality: 0.84});
-      const key = 'photo:' + uid();
-      const doc = new Doc(key);
-      doc.packet = {session: statsDoc.packet.session, revision: 0, doc: {}};
-      await doc.commit(d => { d.data = data; });
-      photos.set(key, data);
-      await statsDoc.commit(s => { const p = s.teams[team].players.find(x => x.id === id); if (p) p.photo = key; });
-      renderRosters(true);
+      await savePhoto(event.target.files[0], team, id);
+      openPhoto(team, id);
     } catch (error) { fail(error); }
   };
 }
+
+let photoFor = null; // {team, id} while the photo window is open
+const photoPlayer = () => photoFor && S().teams[photoFor.team].players.find(p => p.id === photoFor.id);
+async function openPhoto(team, id) {
+  photoFor = {team, id};
+  const player = photoPlayer();
+  if (!player) return;
+  setText('photoTitle', `${player.num ? '#' + player.num + ' ' : ''}${player.name}`);
+  const [x, y] = photoPosition(player.photoPos).split(' ');
+  byId('photoX').replaceChildren(...PHOTO_X.map(([value, label]) => new Option(label, value)));
+  byId('photoY').replaceChildren(...PHOTO_Y.map(([value, label]) => new Option(label, value)));
+  byId('photoX').value = x;
+  byId('photoY').value = y;
+  const img = byId('photoImg');
+  img.style.objectPosition = `${x} ${y}`;
+  img.src = (await photo(player.photo)) || '';
+  if (!byId('photoDialog').open) byId('photoDialog').showModal();
+}
+['photoX', 'photoY'].forEach(name => {
+  byId(name).onchange = () => {
+    const pos = `${byId('photoX').value} ${byId('photoY').value}`;
+    byId('photoImg').style.objectPosition = pos;
+    const {team, id} = photoFor;
+    statsDoc.commit(s => { const p = s.teams[team].players.find(x => x.id === id); if (p) p.photoPos = pos; }).then(() => renderRosters(true)).catch(fail);
+  };
+});
+byId('photoReplace').onchange = async event => {
+  const {team, id} = photoFor;
+  try { await savePhoto(event.target.files[0], team, id); openPhoto(team, id); } catch (error) { fail(error); }
+  event.target.value = '';
+};
+byId('photoRemove').onclick = () => {
+  const {team, id} = photoFor;
+  byId('photoDialog').close();
+  statsDoc.commit(s => { const p = s.teams[team].players.find(x => x.id === id); if (p) { p.photo = ''; delete p.photoPos; } }).then(() => renderRosters(true)).catch(fail);
+};
 
 byId('backup').onclick = () => download(`stats-${S().sport}-${new Date().toISOString().slice(0, 10)}.json`, JSON.stringify(S(), null, 1), 'application/json');
 byId('restore').onchange = async event => {
@@ -491,7 +540,7 @@ async function playerOnAir(team, id, box) {
   const entry = box.teams[team].players.find(p => p.player.id === id);
   if (!player || !entry) return;
   const graphic = {type: 'player', side: team, title: player.name, number: player.num || '', kicker: POS[(player.pos || '').toUpperCase()] || player.pos || teamName(team),
-    subtitle: [teamName(team), player.cls].filter(Boolean).join(' · '), stat: statLine(S().sport, entry.line) || 'Tonight', photo: await photo(player.photo), rows: [], id: uid(), until: serverNow() + 10000};
+    subtitle: [teamName(team), player.cls].filter(Boolean).join(' · '), stat: statLine(S().sport, entry.line) || 'Tonight', photo: await photo(player.photo), photoPos: photoPosition(player.photoPos), rows: [], id: uid(), until: serverNow() + 10000};
   liveDoc.commit(d => { d.graphic = graphic; }).then(() => toast(`${player.name} is on air for 10 seconds`)).catch(fail);
 }
 byId('compareLive').onclick = () => {
