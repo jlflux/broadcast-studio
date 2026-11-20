@@ -815,9 +815,20 @@ function cleanTeam(t) {
   return {name: t.name.trim().slice(0, 60) || 'Team', short: (t.short.trim() || t.name.slice(0, 3)).toUpperCase().slice(0, 5), rank: String(t.rank || '').trim().slice(0, 3),
     record: String(t.record || '').trim().slice(0, 12), color: hexColor(t.color) || '#323a46', accent: hexColor(t.accent) || '#323a46', logo: t.logo || '', logoBacking: Boolean(t.logoBacking)};
 }
-byId('teamForm').onsubmit = event => {
+byId('teamForm').onsubmit = async event => {
   event.preventDefault();
-  change(d => { d.teams = teamDrafts.map(cleanTeam); }, 'Teams applied').then(ok => { if (ok) { teamsDirty = false; renderTeamEditors(); } });
+  const before = L().teams.map(t => t.name);
+  const ok = await change(d => { d.teams = teamDrafts.map(cleanTeam); });
+  if (!ok) return;
+  teamsDirty = false;
+  renderTeamEditors();
+  const notes = [];
+  for (const side of [0, 1]) {
+    const name = L().teams[side].name;
+    if (sameName(name, before[side])) continue; // only a side that got a different team
+    try { notes.push(rosterMessage(await switchRoster(side, name, before[side]), name, side)); } catch (error) { fail(error); }
+  }
+  toast(['Teams applied.', ...notes.filter(Boolean)].join(' '));
 };
 // ── Team profiles ──
 // A profile is a saved team (name, abbreviation, colors, logo, rank, record)
@@ -835,22 +846,40 @@ function profileNote(i) {
     : `No ${sport} roster on this side yet. Add one in the stat keeper's Rosters tab, then save the profile again.`;
 }
 
+// When a different team goes on a side, the stat keeper roster follows it:
+// the new team's saved roster for this sport, or an empty roster if it has
+// none. Asks first if plays are already logged for that side.
+// Returns 'loaded' | 'cleared' | 'kept' | 'same'.
+async function switchRoster(side, name, previousName) {
+  const current = statsDoc.doc?.teams[side]?.players || [];
+  if (sameName(name, previousName) && current.length) return 'same'; // same team: keep any unsaved roster edits
+  const roster = savedRoster(name);
+  if (!roster && !current.length) return 'cleared';
+  if (statsDoc.doc.events.some(e => e.team === side)) {
+    const ok = await confirmBox(roster ? `Load ${name}'s roster?` : `Clear the ${side ? 'right' : 'left'} roster?`,
+      `Plays are already logged for the ${side ? 'right' : 'left'} team in this stat game. ${roster ? 'Replacing' : 'Clearing'} its roster makes those plays show as "Unknown player".`,
+      roster ? 'Load roster' : 'Clear roster');
+    if (!ok) return 'kept';
+  }
+  await statsDoc.commit(s => { s.teams[side].players = roster ? copy(roster.players) : []; });
+  return roster ? 'loaded' : 'cleared';
+}
+function rosterMessage(result, name, side) {
+  const roster = savedRoster(name);
+  if (result === 'loaded') return `${name}'s ${roster.players.length}-player ${rosterSport()} roster is in the stat keeper`;
+  if (result === 'cleared') return `No saved ${rosterSport()} roster for ${name}, so the ${side ? 'right' : 'left'} roster is empty`;
+  if (result === 'kept') return `Roster on the ${side ? 'right' : 'left'} left as it was`;
+  return '';
+}
+
 async function loadProfile(side, saved) {
   const {id, ...team} = saved;
-  const sport = rosterSport();
-  const roster = savedRoster(saved.name, sport);
-  let withRoster = Boolean(roster);
-  if (roster && statsDoc.doc?.events.some(e => e.team === side)) {
-    withRoster = await confirmBox(`Load ${saved.name}'s roster too?`,
-      `Plays are already logged for the ${side ? 'right' : 'left'} team in this stat game. Replacing its roster makes those plays show as "Unknown player".`, 'Load roster');
-  }
-  const where = side ? 'right' : 'left';
-  const message = withRoster ? `${saved.name} loaded on the ${where} with its ${roster.players.length}-player ${sport} roster`
-    : roster ? `${saved.name} loaded on the ${where} (roster kept as it was)`
-    : `${saved.name} loaded on the ${where}. No saved ${sport} roster yet`;
-  const ok = await change(d => { d.teams[side] = cleanTeam({...d.teams[side], ...team}); }, message);
+  const previousName = L().teams[side].name;
+  const ok = await change(d => { d.teams[side] = cleanTeam({...d.teams[side], ...team}); });
   if (!ok) return;
-  if (withRoster) await statsDoc.commit(s => { s.teams[side].players = copy(roster.players); }).catch(fail);
+  let result = 'kept';
+  try { result = await switchRoster(side, saved.name, previousName); } catch (error) { fail(error); }
+  toast([`${saved.name} is on the ${side ? 'right' : 'left'}.`, rosterMessage(result, saved.name, side)].filter(Boolean).join(' '));
   if (teamsDirty) { teamDrafts[side] = copy(L().teams[side]); renderTeamEditors(false); }
   else { teamsKey = ''; renderTeamEditors(); }
   renderLibrary();
