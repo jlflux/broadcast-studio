@@ -57,11 +57,9 @@
         </section>
         <section class="card">
           <header><h2>Game situation</h2><button type="button" id="nextPeriod">Next period →</button></header>
-          <div class="grid3">
-            <label>Period<select id="periodSelect"></select></label>
-            <label id="possLabel" class="football">Possession<select id="possessionSelect"></select></label>
-            <label class="hoops">Possession arrow<select id="arrowSelect"></select></label>
-          </div>
+          <div class="sitPick"><span class="label">Period</span><div class="segmented" id="periodButtons" role="group" aria-label="Period"></div></div>
+          <div class="sitPick football" id="possLabel"><span class="label">Possession</span><div class="segmented" id="possessionButtons" role="group" aria-label="Possession"></div></div>
+          <div class="sitPick hoops"><span class="label">Possession arrow</span><div class="segmented" id="arrowButtons" role="group" aria-label="Possession arrow"></div></div>
           <div class="football" style="margin-top:10px">
             <div class="row" id="downButtons"></div>
             <div class="grid3" style="margin-top:10px">

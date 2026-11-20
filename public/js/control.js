@@ -47,6 +47,19 @@ function options(select, entries, value) {
   }
   if (value !== undefined && document.activeElement !== select) select.value = String(value);
 }
+// A row of buttons that works like a dropdown: one press sets the value, and
+// the current value stays lit. Rebuilt only when the choices change.
+function buttons(group, entries, value, pick) {
+  const signature = JSON.stringify(entries);
+  if (group.dataset.options !== signature) {
+    group.innerHTML = entries.map(([id, label]) => `<button type="button" data-value="${esc(String(id))}">${esc(label)}</button>`).join('');
+    group.dataset.options = signature;
+  }
+  $$('button', group).forEach(b => {
+    b.onclick = () => pick(b.dataset.value);
+    b.setAttribute('aria-pressed', b.dataset.value === String(value));
+  });
+}
 const sideOptions = () => [[-1, 'Studio accent'], [0, L().teams[0].name], [1, L().teams[1].name]];
 
 // ── Tabs ────────────────────────────────────────────────────────────────────
@@ -215,9 +228,9 @@ function renderLive() {
   byId('showClock').checked = g.showClock;
   byId('showAux').checked = g.showAux;
   setText('periodLength', `${s.minutes}:00 periods`);
-  options(byId('periodSelect'), PERIODS[d.sport].map(p => [p, p]), g.period);
-  options(byId('possessionSelect'), [[-1, 'None'], [0, d.teams[0].name], [1, d.teams[1].name]], g.possession);
-  if (d.sport === 'basketball') options(byId('arrowSelect'), [[-1, 'Not shown'], [0, '◀ ' + d.teams[0].name], [1, d.teams[1].name + ' ▶']], g.arrow);
+  buttons(byId('periodButtons'), PERIODS[d.sport].map(p => [p, p]), g.period, v => changeGame(game => { game.period = v; }));
+  if (d.sport === 'football') buttons(byId('possessionButtons'), [[0, d.teams[0].name], [-1, 'None'], [1, d.teams[1].name]], g.possession, v => changeGame(game => { game.possession = Number(v); }));
+  if (d.sport === 'basketball') buttons(byId('arrowButtons'), [[0, '◀ ' + d.teams[0].name], [-1, 'Off'], [1, d.teams[1].name + ' ▶']], g.arrow, v => changeGame(game => { game.arrow = Number(v); }));
   if (d.sport === 'football') {
     const downs = byId('downButtons');
     if (!downs.children.length) {
@@ -288,9 +301,6 @@ byId('showClock').onchange = event => changeGame(g => { g.showClock = event.targ
 byId('showAux').onchange = event => changeGame(g => { g.showAux = event.target.checked; });
 byId('linkAux').checked = local.get('linkAux', true);
 byId('linkAux').onchange = event => local.set('linkAux', event.target.checked);
-byId('periodSelect').onchange = event => changeGame(g => { g.period = event.target.value; });
-byId('possessionSelect').onchange = event => changeGame(g => { g.possession = Number(event.target.value); });
-byId('arrowSelect').onchange = event => changeGame(g => { g.arrow = Number(event.target.value); });
 byId('nextPeriod').onclick = nextPeriod;
 byId('distanceForm').onsubmit = event => {
   event.preventDefault();
