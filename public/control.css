@@ -89,3 +89,34 @@ legend{font-size:12px;color:#c1cddb;padding:0 4px}
 .sitPick>.label{min-width:140px;margin:0}
 .sitPick .segmented{flex-wrap:wrap;max-width:100%}
 .sitPick .segmented button{padding:0 12px;font-weight:700}
+
+/* Full-width tabs (Stat keeper, Team builder): hide the program monitor column */
+body.wideTab .workspace{grid-template-columns:minmax(0,1fr)}
+body.wideTab .workspace>aside{display:none}
+#statsFrame{display:block;width:100%;border:1px solid var(--line);border-radius:10px;background:var(--bg,#0b1018)}
+
+/* Team builder */
+.builder{display:grid;grid-template-columns:300px minmax(0,1fr);gap:14px;align-items:start}
+.builder>.card{margin-bottom:12px}
+.builderList{position:sticky;top:78px;max-height:calc(100vh - 100px);display:flex;flex-direction:column}
+.builderList input[type=search]{margin-bottom:8px}
+.builderList .list{overflow:auto}
+.bTeam{display:flex;align-items:center;gap:8px;width:100%;text-align:left;padding:7px 8px;border:1px solid transparent;border-radius:8px;background:none;min-height:0;margin-bottom:2px}
+.bTeam:hover{background:var(--sub-card)}
+.bTeam[aria-current="true"]{border-color:var(--amber);background:#2a250f}
+.bTeam img,.bTeam .swatch{width:28px;height:28px;object-fit:contain;flex:0 0 auto;margin:0;border-radius:5px}
+.bTeam span{flex:1;min-width:0}
+.bTeam strong{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bTeam small{color:var(--sub);font-size:11.5px}
+#bForm header h2 .muted{font-size:13px;font-weight:600}
+#bForm textarea{min-height:64px}
+.rosterList{display:grid;gap:4px;margin-top:10px;max-height:520px;overflow:auto}
+.rosterRow{display:grid;grid-template-columns:44px 56px 1fr 64px 60px 30px;gap:5px;align-items:center}
+.rosterRow input{min-height:30px!important;padding:3px 6px!important}
+.rosterRow .thumb{width:44px;height:44px;border-radius:5px;background:#0a111b;border:1px dashed var(--line-hi);display:grid;place-items:center;cursor:pointer;overflow:hidden;color:var(--sub);font-size:18px}
+.rosterRow .thumb img{width:44px;height:44px;object-fit:cover;display:block}
+button.thumb{padding:0;min-height:0;border-style:solid}
+.photoEdit{display:grid;grid-template-columns:170px minmax(0,1fr);gap:16px;align-items:start}
+.photoSquare{width:170px;height:188px;border-radius:8px;overflow:hidden;background:#0a111b;border:1px solid var(--line-hi)}
+.photoSquare img{width:100%;height:100%;object-fit:cover;display:block}
+@media(max-width:900px){.builder{grid-template-columns:1fr}.builderList{position:static;max-height:none}}

@@ -36,7 +36,7 @@ dialog{width:min(560px,calc(100% - 20px))}
 .rosterRow{display:grid;grid-template-columns:44px 56px 1fr 64px 60px 30px;gap:5px;align-items:center}
 .rosterRow input{min-height:30px!important;padding:3px 6px!important}
 .rosterRow .thumb{width:44px;height:44px;border-radius:5px;background:#0a111b;border:1px dashed var(--line-hi);display:grid;place-items:center;cursor:pointer;overflow:hidden;color:var(--sub);font-size:18px}
-.rosterRow .thumb img{width:100%;height:100%;object-fit:cover}
+.rosterRow .thumb img{width:44px;height:44px;object-fit:cover;display:block}
 button.thumb{padding:0;min-height:0;border-style:solid}
 .photoEdit{display:grid;grid-template-columns:170px minmax(0,1fr);gap:16px;align-items:start}
 .photoSquare{width:170px;height:188px;border-radius:8px;overflow:hidden;background:#0a111b;border:1px solid var(--line-hi)}
@@ -53,3 +53,7 @@ button.thumb{padding:0;min-height:0;border-style:solid}
 @media(max-width:1000px){.liveGrid{grid-template-columns:1fr 1fr}.pad{grid-column:1/-1;grid-row:1;position:static}}
 @media(max-width:620px){.liveGrid{grid-template-columns:1fr}}
 @media print{header.top,nav.tabs,.scorebar,.mismatch,#tab-box>.row,.airBtn{display:none!important}body{background:#fff;color:#000}.card,.boxTeam{border:0;background:#fff}th,td{color:#000;border-color:#999}main{width:100%}#tab-box{display:block!important}}
+
+/* Inside the control panel's Stat keeper tab */
+.embed header.top{display:none}
+.embed body{padding-top:10px}
