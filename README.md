@@ -8,8 +8,8 @@ It runs on Vercel with a Neon Postgres database (the same setup as the Homewood 
 
 | Page | What it does |
 |---|---|
-| `/control` | Control panel: score, clocks, down & distance, fouls/bonus, possession, banners, the stat keeper (as a tab), stat graphics, graphics, ticker, teams, team builder, style, and scoreboard serial import |
-| `/stats` | Stat keeper: rosters, tap-player-then-action stat entry, box score, play-by-play. Sends the score (and basketball team fouls) to the scorebug. Also runs inside the control panel's **Stat keeper** tab; open it on its own for a second screen or tablet |
+| `/control` | Control panel. **Live** is one game screen: each team's score, timeouts, fouls and roster on its side; clock, stat pad and game situation in the middle; program monitor across the top. Also: box score & plays, stat graphics, graphics, ticker, teams, team builder, style, and scoreboard serial import |
+| `/stats` | Stat keeper: rosters, tap-player-then-action stat entry, box score, play-by-play. Sends the score (and basketball team fouls) to the scorebug. Play entry is also built into the control panel's Live tab; the box score, play-by-play and rosters are in its **Box score & plays** tab. Open `/stats` on its own for a second screen or tablet |
 | `/overlay` | The OBS Browser Source (1920 × 1080, transparent) |
 
 **Scorebug.** Football and basketball, each with its own saved game, so switching sports keeps both games. Four layouts: a wide **broadcast bar**, a slim **ribbon bar** (name plates, team-color logo tiles and score slabs around an angled clock tile), **team cards + clock tile** (two team cards meeting at a raised clock tile), and a compact **corner box**. Ribbon and badge use a name plate / card color you set in Style. All layouts can be placed in any of six positions with size and nudge controls. It shows timeouts, possession, down & distance or a status (FLAG, TIMEOUT, REVIEW…), the play clock or shot clock, team fouls, and a BONUS tag. Clocks run on the server's time, so every screen agrees. Basketball shows tenths under a minute.

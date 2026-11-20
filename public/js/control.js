@@ -5,6 +5,8 @@ import {LEAGUES} from './ticker-layer.js';
 import {boxScore, compareRows, score as statsScore, statLine} from './stats-engine.js';
 import {playerBase, playerGraphics, teamGraphics} from './stat-graphics.js';
 import {initTeamBuilder} from './team-builder.js';
+import {createStatEntry} from './stat-entry.js';
+import {defaultStats} from './defaults.js';
 import {ENCODINGS, FIELDS, SerialReader, decodeRaw, interpret, parseHex} from './serial.js';
 import {roleOf} from './feed.js';
 
@@ -12,7 +14,7 @@ import {roleOf} from './feed.js';
 const liveDoc = new Doc('live', {onChange: () => render(), interval: 800});
 const tickerDoc = new Doc('ticker', {onChange: () => renderTicker(), interval: 5000});
 const libraryDoc = new Doc('library', {onChange: () => renderLibrary(), interval: 6000});
-const statsDoc = new Doc('stats', {onChange: () => { renderStatsLinks(); renderStatGraphics(); if (liveDoc.ready) renderTeamEditors(); }, interval: 1500});
+const statsDoc = new Doc('stats', {onChange: () => { renderStatsLinks(); renderStatGraphics(); renderGame(); if (liveDoc.ready) renderTeamEditors(); }, interval: 1500});
 const L = () => liveDoc.doc;
 const G = () => L().games[L().sport];
 let overlayKey = '';
@@ -72,6 +74,7 @@ function setTab(tab) {
   $$('nav.tabs [data-tab]').forEach(b => { if (b.dataset.tab === tab) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current'); });
   TABS.forEach(name => { byId('tab-' + name).hidden = name !== tab; });
   document.body.classList.toggle('wideTab', WIDE_TABS.includes(tab));
+  document.body.classList.toggle('liveTab', tab === 'live'); // program monitor moves to a strip on top
   local.set('tab', tab);
   if (tab === 'stats') openStatsFrame();
   if (tab === 'builder') builder?.show();
@@ -83,7 +86,7 @@ $$('nav.tabs [data-tab]').forEach(b => { b.onclick = () => setTab(b.dataset.tab)
 // time the tab opens and then stays running, so switching tabs never loses a play.
 function openStatsFrame() {
   const frame = byId('statsFrame');
-  if (!frame.src) frame.src = '/stats?embed=1';
+  if (!frame.src) frame.src = '/stats?embed=1'; // box score, play-by-play and rosters (plays are entered on Live)
   fitStatsFrame();
 }
 function fitStatsFrame() {
@@ -114,7 +117,7 @@ function buildLive(sport) {
   document.body.classList.toggle('football', sport === 'football');
   document.body.classList.toggle('basketball', sport === 'basketball');
   const pointSet = sport === 'football' ? [6, 3, 2, 1, -1] : [3, 2, 1, -1, -2];
-  byId('teamCards').innerHTML = [0, 1].map(i => `
+  [0, 1].forEach(i => { byId('teamCardSlot' + i).innerHTML = `
     <section class="card teamCard" id="teamCard${i}">
       <div class="between"><h3 id="teamName${i}"></h3><span class="muted">${i === 0 ? 'LEFT' : 'RIGHT'}</span></div>
       <div class="scoreLine"><output class="readout" id="score${i}"></output>
@@ -122,7 +125,7 @@ function buildLive(sport) {
       <div class="pointButtons">${pointSet.map(p => `<button type="button" data-points="${p}">${p > 0 ? '+' + p : '−' + -p}</button>`).join('')}</div>
       ${counter(i, 'timeouts', 'Timeouts left', 9)}
       ${sport === 'basketball' ? counter(i, 'fouls', 'Team fouls', 99) : ''}
-    </section>`).join('');
+    </section>`; });
   [0, 1].forEach(i => {
     const card = byId('teamCard' + i);
     $$('[data-points]', card).forEach(b => { b.onclick = () => addPoints(i, Number(b.dataset.points)); });
@@ -538,6 +541,61 @@ byId('loadCompare').onclick = () => {
   loadDraftForm();
   local.set('draft', draft);
 };
+
+// ── Live tab: stat entry ─────────────────────────────────────────────────────
+// The stat keeper's players and action pad, in the middle of the Live tab.
+// Keyboard shortcuts stay with the control panel (Space, Esc…), so the stat
+// pad's own U / Esc keys are off here; tap a player again to deselect.
+const gameEntry = createStatEntry({statsDoc, liveDoc, fail, headers: false, keys: false, rosterHint: 'Load the team on the Teams tab, or add players in the Team builder.',
+  els: {side0: byId('gside0'), side1: byId('gside1'), selected: byId('gSelected'), actions: byId('gActions'), recent: byId('gRecent')},
+  afterChange: () => renderGame(true)});
+let gameKey = '';
+let switchingStats = false;
+function renderGame(force = false) {
+  if (!liveDoc.ready || !statsDoc.ready) return;
+  const stats = statsDoc.doc;
+  const sport = L().sport;
+  // Stats follow the scorebug's sport. With no plays logged yet, switch quietly
+  // and load each team's saved roster for that sport.
+  if (stats.sport !== sport && !stats.events.length && !switchingStats) { switchStatsSport(sport); return; }
+  const key = JSON.stringify([statsDoc.packet.session, statsDoc.packet.revision, L().teams.map(t => [t.color, t.short]), sport]);
+  if (force || key !== gameKey) { gameKey = key; gameEntry.render(); }
+  byId('gAutoSend').checked = stats.autoSend !== false;
+  const bar = byId('gMismatch');
+  const fix = byId('gFix');
+  if (stats.sport !== sport) {
+    bar.hidden = false;
+    setText('gMismatchText', `Stats are on ${stats.sport}, the scorebug is on ${sport}.`);
+    fix.textContent = `Switch stats to ${sport}`;
+    fix.onclick = async () => {
+      if (await confirmBox(`Switch stats to ${sport}?`, 'This clears the logged plays for a new game. Download a backup from Box score & plays first if you need it.', 'Switch')) switchStatsSport(sport);
+    };
+    return;
+  }
+  const s = statsScore(sport, stats.events);
+  const g = L().games[sport];
+  const differs = stats.events.length && (s[0] !== g.score[0] || s[1] !== g.score[1]);
+  bar.hidden = !differs || gameEntry.sending;
+  if (differs) {
+    setText('gMismatchText', `Scorebug shows ${g.score[0]}–${g.score[1]}, stats have ${s[0]}–${s[1]}.`);
+    fix.textContent = 'Set scorebug to stats';
+    fix.onclick = () => gameEntry.sendToBug(true);
+  }
+}
+async function switchStatsSport(sport) {
+  switchingStats = true;
+  try {
+    const fresh = defaultStats();
+    const rosters = [0, 1].map(side => copy(savedRoster(L().teams[side].name, sport)?.players || []));
+    await statsDoc.commit(s => {
+      Object.assign(s, {...fresh, sport, autoSend: s.autoSend});
+      rosters.forEach((players, side) => { s.teams[side].players = players; });
+    });
+  } catch (error) { fail(error); }
+  finally { switchingStats = false; renderGame(true); }
+}
+byId('gUndo').onclick = () => gameEntry.undo();
+byId('gAutoSend').onchange = event => statsDoc.commit(s => { s.autoSend = event.target.checked; }).catch(fail);
 
 // ── Stat graphics tab ───────────────────────────────────────────────────────
 // Pick a player (or a team graphic), see it in the preview with the numbers
@@ -1308,6 +1366,7 @@ function render() {
   renderStatsLinks();
   renderStatGraphics();
   renderGamePicker();
+  renderGame();
   renderFeed();
   if (!byId('serMap').tBodies[0].children.length || byId('serMap').dataset.sport !== L().sport) {
     byId('serMap').dataset.sport = L().sport;

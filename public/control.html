@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Broadcast Studio · Control</title>
 <link rel="stylesheet" href="/studio.css">
+<link rel="stylesheet" href="/stat-entry.css">
 <link rel="stylesheet" href="/control.css">
 <script type="module" src="/js/control.js"></script>
 </head>
@@ -31,46 +32,59 @@
     <div class="row" id="statsSync" hidden><span class="muted" id="statsSyncText"></span><button id="statsSyncApply" type="button">Set scorebug to stats</button></div>
   </div>
   <nav class="tabs" aria-label="Sections">
-    <button data-tab="live" aria-current="page">Live</button><button data-tab="stats">Stat keeper</button><button data-tab="statgfx">Stat graphics</button><button data-tab="graphics">Graphics</button><button data-tab="ticker">Ticker</button><button data-tab="teams">Teams</button><button data-tab="builder">Team builder</button><button data-tab="style">Style</button><button data-tab="scoreboard">Scoreboard data</button>
+    <button data-tab="live" aria-current="page">Live</button><button data-tab="stats">Box score &amp; plays</button><button data-tab="statgfx">Stat graphics</button><button data-tab="graphics">Graphics</button><button data-tab="ticker">Ticker</button><button data-tab="teams">Teams</button><button data-tab="builder">Team builder</button><button data-tab="style">Style</button><button data-tab="scoreboard">Scoreboard data</button>
   </nav>
   <div class="workspace">
     <div class="editor">
-      <!-- LIVE -->
+      <!-- LIVE: one game screen. Each team's scorebug controls and roster on its
+           side; stat pad, clock and game situation in the middle. -->
       <section id="tab-live">
-        <div class="grid2" id="teamCards"></div>
-        <section class="card">
-          <header><h2>Clock</h2><div class="row"><label class="check"><input type="checkbox" id="showClock"> Show game clock</label><label class="check"><input type="checkbox" id="showAux"> Show&nbsp;<span class="auxName">play clock</span></label></div></header>
-          <div class="grid2">
-            <div class="sub">
-              <div class="between"><span class="label">Game clock</span><span class="muted" id="periodLength"></span></div>
-              <output class="readout" id="gameReadout">–:––</output>
-              <div class="row"><button class="primary big" id="gameToggle" type="button">Start</button><button id="gameReset" type="button">Reset</button></div>
-              <form class="inline" id="gameSet" style="margin-top:8px"><input id="gameInput" placeholder="MM:SS" inputmode="decimal" maxlength="7" aria-label="Set game clock" required><button>Set</button></form>
-            </div>
-            <div class="sub">
-              <div class="between"><span class="label auxName">Play clock</span><label class="check" id="linkAuxBox"><input type="checkbox" id="linkAux" checked> Stops with game clock</label></div>
-              <output class="readout" id="auxReadout">––</output>
-              <div class="row" id="auxButtons"></div>
-              <form class="inline" id="auxSet" style="margin-top:8px"><input id="auxInput" type="number" min="0" max="99" placeholder="Seconds" aria-label="Set aux clock" required><button>Set</button></form>
-            </div>
+        <div class="gameGrid">
+          <div class="gameSide"><div id="teamCardSlot0"></div><div class="side" id="gside0"></div></div>
+          <div class="gameMid">
+            <section class="card">
+              <header><h2>Clock</h2><div class="row"><label class="check"><input type="checkbox" id="showClock"> Show game clock</label><label class="check"><input type="checkbox" id="showAux"> Show&nbsp;<span class="auxName">play clock</span></label></div></header>
+              <div class="grid2">
+                <div class="sub">
+                  <div class="between"><span class="label">Game clock</span><span class="muted" id="periodLength"></span></div>
+                  <output class="readout" id="gameReadout">–:––</output>
+                  <div class="row"><button class="primary big" id="gameToggle" type="button">Start</button><button id="gameReset" type="button">Reset</button></div>
+                  <form class="inline" id="gameSet" style="margin-top:8px"><input id="gameInput" placeholder="MM:SS" inputmode="decimal" maxlength="7" aria-label="Set game clock" required><button>Set</button></form>
+                </div>
+                <div class="sub">
+                  <div class="between"><span class="label auxName">Play clock</span><label class="check" id="linkAuxBox"><input type="checkbox" id="linkAux" checked> Stops with game clock</label></div>
+                  <output class="readout" id="auxReadout">––</output>
+                  <div class="row" id="auxButtons"></div>
+                  <form class="inline" id="auxSet" style="margin-top:8px"><input id="auxInput" type="number" min="0" max="99" placeholder="Seconds" aria-label="Set aux clock" required><button>Set</button></form>
+                </div>
+              </div>
+            </section>
+            <section class="pad gamePad">
+              <div class="between padTop"><span class="label" style="margin:0">Stats</span><div class="row"><label class="check" title="Send the score (and basketball team fouls) to the scorebug after every play"><input type="checkbox" id="gAutoSend"> Send score to scorebug</label><button type="button" id="gUndo">↶ Undo</button></div></div>
+              <div class="mismatch" id="gMismatch" hidden><span id="gMismatchText"></span><button type="button" id="gFix"></button></div>
+              <div class="selected" id="gSelected">Tap a player, then an action</div>
+              <div class="actions" id="gActions"></div>
+              <div class="recent" id="gRecent"></div>
+            </section>
+            <section class="card">
+              <header><h2>Game situation</h2><button type="button" id="nextPeriod">Next period →</button></header>
+              <div class="sitPick"><span class="label">Period</span><div class="segmented" id="periodButtons" role="group" aria-label="Period"></div></div>
+              <div class="sitPick football" id="possLabel"><span class="label">Possession</span><div class="segmented" id="possessionButtons" role="group" aria-label="Possession"></div></div>
+              <div class="sitPick hoops"><span class="label">Possession arrow</span><div class="segmented" id="arrowButtons" role="group" aria-label="Possession arrow"></div></div>
+              <div class="football" style="margin-top:10px">
+                <div class="row" id="downButtons"></div>
+                <div class="grid3" style="margin-top:10px">
+                  <form id="distanceForm"><label for="distanceInput">Yards to go</label><div class="inline" style="margin-top:4px"><input id="distanceInput" maxlength="4" placeholder="10 or Goal" required><button>Set</button></div></form>
+                  <form id="ballOnForm"><label for="ballOnInput">Ball on (corner layout)</label><div class="inline" style="margin-top:4px"><input id="ballOnInput" maxlength="12" placeholder="WES 34"><button>Set</button></div></form>
+                  <div><span class="label">Quick</span><div class="row" style="margin-top:4px"><button type="button" id="firstTen">1st &amp; 10</button><button type="button" id="goal">&amp; Goal</button></div></div>
+                </div>
+              </div>
+              <p class="muted football" style="margin-top:8px">Down &amp; distance shows on the bug only while a team has possession.</p>
+              <div style="margin-top:12px"><span class="label">Status (pops out of the clock box)</span><div class="row" id="statusButtons" style="margin-top:5px"></div></div>
+            </section>
           </div>
-        </section>
-        <section class="card">
-          <header><h2>Game situation</h2><button type="button" id="nextPeriod">Next period →</button></header>
-          <div class="sitPick"><span class="label">Period</span><div class="segmented" id="periodButtons" role="group" aria-label="Period"></div></div>
-          <div class="sitPick football" id="possLabel"><span class="label">Possession</span><div class="segmented" id="possessionButtons" role="group" aria-label="Possession"></div></div>
-          <div class="sitPick hoops"><span class="label">Possession arrow</span><div class="segmented" id="arrowButtons" role="group" aria-label="Possession arrow"></div></div>
-          <div class="football" style="margin-top:10px">
-            <div class="row" id="downButtons"></div>
-            <div class="grid3" style="margin-top:10px">
-              <form id="distanceForm"><label for="distanceInput">Yards to go</label><div class="inline" style="margin-top:4px"><input id="distanceInput" maxlength="4" placeholder="10 or Goal" required><button>Set</button></div></form>
-              <form id="ballOnForm"><label for="ballOnInput">Ball on (corner layout)</label><div class="inline" style="margin-top:4px"><input id="ballOnInput" maxlength="12" placeholder="WES 34"><button>Set</button></div></form>
-              <div><span class="label">Quick</span><div class="row" style="margin-top:4px"><button type="button" id="firstTen">1st &amp; 10</button><button type="button" id="goal">&amp; Goal</button></div></div>
-            </div>
-          </div>
-          <p class="muted football" style="margin-top:8px">Down &amp; distance shows on the bug only while a team has possession.</p>
-          <div style="margin-top:12px"><span class="label">Status (pops out of the clock box)</span><div class="row" id="statusButtons" style="margin-top:5px"></div></div>
-        </section>
+          <div class="gameSide"><div id="teamCardSlot1"></div><div class="side" id="gside1"></div></div>
+        </div>
         <section class="card">
           <header><h2>Banner</h2><span class="muted">Shows next to the scorebug</span></header>
           <div class="row" id="bannerQuick"></div>
@@ -82,8 +96,8 @@
         </section>
       </section>
 
-      <!-- STAT KEEPER (the /stats page, kept loaded while you use other tabs) -->
-      <section id="tab-stats" hidden><iframe id="statsFrame" title="Stat keeper"></iframe></section>
+      <!-- BOX SCORE & PLAYS: the stat keeper page (box score, play-by-play, rosters), kept loaded -->
+      <section id="tab-stats" hidden><iframe id="statsFrame" title="Box score and plays"></iframe></section>
 
       <!-- STAT GRAPHICS -->
       <section id="tab-statgfx" hidden>
