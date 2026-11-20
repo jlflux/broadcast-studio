@@ -201,7 +201,11 @@ function paintBug() {
   setText('period', game.period);
   byId('aux').hidden = !game.showAux;
   byId('center')?.classList.toggle('noaux', !game.showAux);
-  byId('aux').style.setProperty('--aux', possession >= 0 ? teams[possession].color : '#ffffff44');
+  // Football: the play clock takes the color of the team with the ball. Basketball's
+  // possession arrow is the alternating-possession arrow, not who has the ball,
+  // so the shot clock uses one color set in the Style tab.
+  const auxColor = sport === 'basketball' ? style.shotColor || '#aeb8c6' : possession >= 0 ? teams[possession].color : '#ffffff44';
+  byId('aux').style.setProperty('--aux', auxColor);
   byId('clock').hidden = !game.showClock;
 
   // A bottom-bar ticker sits under the bug and lower thirds, so lift them.

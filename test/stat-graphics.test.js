@@ -125,3 +125,14 @@ test('server accepts photo alignment on a graphic and rejects junk', async () =>
   assert.equal(validLive({...live, graphic}), true);
   assert.equal(validLive({...live, graphic: {...graphic, photoPos: 'url(evil)'}}), false);
 });
+
+test('server accepts a shot clock color and rejects junk', async () => {
+  const {validLive} = await import('../lib/validate.js');
+  const {defaultLive} = await import('../lib/defaults.js');
+  const live = defaultLive();
+  assert.equal(live.style.shotColor, '#aeb8c6');
+  assert.equal(validLive({...live, style: {...live.style, shotColor: '#ffcc00'}}), true);
+  const {shotColor, ...older} = live.style;
+  assert.equal(validLive({...live, style: older}), true, 'older saved styles without the setting still load');
+  assert.equal(validLive({...live, style: {...live.style, shotColor: 'red; display:none'}}), false);
+});
