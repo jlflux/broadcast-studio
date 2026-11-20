@@ -5,33 +5,6 @@
 .timeBox{font:800 22px "Barlow Condensed",sans-serif;font-variant-numeric:tabular-nums;background:#0a111b;border:1px solid var(--line);border-radius:6px;padding:2px 10px}
 .mismatch{display:flex;align-items:center;gap:8px;flex-wrap:wrap;background:#3a3214;border:1px solid #806416;color:#ffd77a;border-radius:8px;padding:6px 8px 6px 12px;margin-bottom:8px}
 .liveGrid{display:grid;grid-template-columns:minmax(0,1fr) minmax(300px,1.1fr) minmax(0,1fr);gap:12px;align-items:start;padding-bottom:20px}
-.side{background:var(--card);border:1px solid var(--line);border-top:4px solid var(--team,#7d8ea6);border-radius:var(--radius);padding:10px}
-.side h2{font:800 20px "Barlow Condensed",sans-serif;text-transform:uppercase;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center}
-.players{display:grid;grid-template-columns:repeat(auto-fill,minmax(112px,1fr));gap:6px}
-.player{display:grid;grid-template-columns:auto 1fr;align-items:center;gap:6px;text-align:left;min-height:48px;padding:4px 8px;white-space:normal;line-height:1.1}
-.player b{font:800 22px "Barlow Condensed",sans-serif;min-width:28px;text-align:center}
-.player span{font-size:12.5px;overflow:hidden}
-.player small{display:block;color:var(--sub);font-size:11px}
-.player.sel{background:var(--amber);color:var(--amber-ink);border-color:var(--amber)}
-.player.sel small{color:#3b2c05}
-.teamActs{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;padding-top:10px;border-top:1px solid var(--line)}
-.pad{position:sticky;top:76px;background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:12px}
-.selected{font:700 18px "Barlow Condensed",sans-serif;text-transform:uppercase;letter-spacing:.02em;text-align:center;padding:8px;border-radius:7px;background:#0a111b;border:1px dashed var(--line-hi);margin-bottom:10px;min-height:42px}
-.selected.on{border-style:solid;border-color:var(--amber);color:#ffd77a}
-.actions{display:grid;grid-template-columns:repeat(2,1fr);gap:7px}
-.actions .groupLabel{grid-column:1/-1;font-size:11px;font-weight:750;letter-spacing:.06em;color:var(--sub);text-transform:uppercase;margin-top:4px}
-.actions button{min-height:52px;font-size:15.5px}
-.actions button.make{background:#173a28;border-color:#2c7a4e}
-.actions button.miss{background:#3b2129;border-color:#6a3541}
-.recent{margin-top:12px;display:grid;gap:4px;font-size:12.5px;color:var(--sub)}
-.recent div{display:flex;gap:8px}
-.recent b{color:var(--text);font-weight:600}
-.chips{display:flex;flex-wrap:wrap;gap:6px}
-.chips button{min-height:40px}
-.chips button[aria-pressed="true"]{background:var(--amber);color:var(--amber-ink);border-color:var(--amber)}
-.yardsRow{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
-.yardsRow input{width:110px!important;font-size:22px;font-weight:700;text-align:center}
-dialog{width:min(560px,calc(100% - 20px))}
 .rosterList{display:grid;gap:4px;margin-top:10px;max-height:520px;overflow:auto}
 .rosterRow{display:grid;grid-template-columns:44px 56px 1fr 64px 60px 30px;gap:5px;align-items:center}
 .rosterRow input{min-height:30px!important;padding:3px 6px!important}
@@ -57,3 +30,4 @@ button.thumb{padding:0;min-height:0;border-style:solid}
 /* Inside the control panel's Stat keeper tab */
 .embed header.top{display:none}
 .embed body{padding-top:10px}
+.embed nav.tabs [data-tab="live"]{display:none}
