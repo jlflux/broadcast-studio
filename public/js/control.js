@@ -4,6 +4,7 @@ import {freshGame} from './defaults.js';
 import {LEAGUES} from './ticker-layer.js';
 import {boxScore, compareRows, score as statsScore, statLine} from './stats-engine.js';
 import {playerBase, playerGraphics, teamGraphics} from './stat-graphics.js';
+import {initTeamBuilder} from './team-builder.js';
 import {ENCODINGS, FIELDS, SerialReader, decodeRaw, interpret, parseHex} from './serial.js';
 import {roleOf} from './feed.js';
 
@@ -63,15 +64,34 @@ function buttons(group, entries, value, pick) {
 const sideOptions = () => [[-1, 'Studio accent'], [0, L().teams[0].name], [1, L().teams[1].name]];
 
 // ── Tabs ────────────────────────────────────────────────────────────────────
-const TABS = ['live', 'statgfx', 'graphics', 'ticker', 'teams', 'style', 'scoreboard'];
+const TABS = ['live', 'stats', 'statgfx', 'graphics', 'ticker', 'teams', 'builder', 'style', 'scoreboard'];
+const WIDE_TABS = ['stats', 'builder'];
+let builder = null; // Team builder, set up at startup // these use the full width (no program monitor column)
 function setTab(tab) {
   if (!TABS.includes(tab)) tab = 'live';
   $$('nav.tabs [data-tab]').forEach(b => { if (b.dataset.tab === tab) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current'); });
   TABS.forEach(name => { byId('tab-' + name).hidden = name !== tab; });
+  document.body.classList.toggle('wideTab', WIDE_TABS.includes(tab));
   local.set('tab', tab);
+  if (tab === 'stats') openStatsFrame();
+  if (tab === 'builder') builder?.show();
   if (tab === 'statgfx') renderStatGraphics(true);
 }
 $$('nav.tabs [data-tab]').forEach(b => { b.onclick = () => setTab(b.dataset.tab); });
+
+// The stat keeper runs inside the control panel in a frame. It loads the first
+// time the tab opens and then stays running, so switching tabs never loses a play.
+function openStatsFrame() {
+  const frame = byId('statsFrame');
+  if (!frame.src) frame.src = '/stats?embed=1';
+  fitStatsFrame();
+}
+function fitStatsFrame() {
+  const frame = byId('statsFrame');
+  if (byId('tab-stats').hidden) return;
+  frame.style.height = Math.max(480, innerHeight - frame.getBoundingClientRect().top - 10) + 'px';
+}
+addEventListener('resize', fitStatsFrame);
 
 // ── Live tab ────────────────────────────────────────────────────────────────
 const PERIODS = {
@@ -872,6 +892,31 @@ function rosterMessage(result, name, side) {
   return '';
 }
 
+// "Today's game": pick a saved team for each side and load everything at once.
+function renderGamePicker() {
+  if (!liveDoc.ready) return;
+  const teams = libraryDoc.doc?.teams || [];
+  const entries = teams.length ? teams.map(t => [t.id, t.name]) : [['', 'No saved teams yet']];
+  [0, 1].forEach(side => {
+    const select = byId('gsTeam' + side);
+    const onBug = teams.find(t => sameName(t.name, L().teams[side].name));
+    const keep = select.dataset.picked && teams.some(t => t.id === select.dataset.picked) ? select.dataset.picked : onBug?.id;
+    options(select, entries, keep ?? entries[0][0]);
+    byId('gsNote' + side).textContent = onBug ? `On the scorebug: ${onBug.name}` : `On the scorebug: ${L().teams[side].name} (not a saved team)`;
+  });
+  byId('gsLoad').disabled = !teams.length;
+}
+[0, 1].forEach(side => { byId('gsTeam' + side).onchange = event => { event.target.dataset.picked = event.target.value; }; });
+byId('gsLoad').onclick = async () => {
+  const teams = libraryDoc.doc?.teams || [];
+  const picks = [0, 1].map(side => teams.find(t => t.id === byId('gsTeam' + side).value));
+  if (picks[0] && picks[1] && picks[0].id === picks[1].id) { toast('Pick two different teams.', 'error'); return; }
+  for (const side of [0, 1]) if (picks[side]) await loadProfile(side, picks[side]);
+  [0, 1].forEach(side => { delete byId('gsTeam' + side).dataset.picked; });
+  renderGamePicker();
+};
+byId('gsBuilder').onclick = () => setTab('builder');
+
 async function loadProfile(side, saved) {
   const {id, ...team} = saved;
   const previousName = L().teams[side].name;
@@ -927,24 +972,10 @@ byId('swapTeams').onclick = async () => {
 
 function renderLibrary() {
   renderPresets();
+  builder?.refresh();
+  renderGamePicker();
   if (liveDoc.ready) renderTeamEditors(!teamsDirty);
-  const list = byId('teamLibrary');
-  const teams = libraryDoc.doc?.teams || [];
-  if (!teams.length) list.innerHTML = '<p class="muted">Use "Save team profile" on a team to keep its colors, logo, record and roster.</p>';
-  else list.replaceChildren(...teams.map(team => {
-    const row = document.createElement('div');
-    row.className = 'listRow';
-    const roster = savedRoster(team.name);
-    const details = [team.short, team.record, roster ? `${roster.players.length} players` : `no ${rosterSport()} roster`].filter(Boolean).join(' · ');
-    row.innerHTML = `${validImage(team.logo) ? `<img src="${esc(team.logo)}" alt="">` : `<span class="swatch" style="--c:${esc(team.color)}"></span>`}<strong>${esc(team.name)} <span class="muted">${esc(details)}</span></strong>
-      <button type="button" data-side="0">Use left</button><button type="button" data-side="1">Use right</button><button type="button" class="ghost" data-delete aria-label="Delete">✕</button>`;
-    $$('[data-side]', row).forEach(b => { b.onclick = () => loadProfile(Number(b.dataset.side), team); });
-    $('[data-delete]', row).onclick = async () => {
-      if (!await confirmBox(`Delete ${team.name}?`, 'This removes the saved team and its saved rosters. Teams already on the scorebug stay.', 'Delete')) return;
-      libraryDoc.commit(lib => { lib.teams = lib.teams.filter(t => t.id !== team.id); lib.rosters = (lib.rosters || []).filter(r => !sameName(r.name, team.name)); }).catch(fail);
-    };
-    return row;
-  }));
+  // The saved-team list lives in the Team builder tab now.
   renderSerialProfiles();
 }
 
@@ -1276,6 +1307,7 @@ function render() {
   if (!teamsDirty) renderTeamEditors();
   renderStatsLinks();
   renderStatGraphics();
+  renderGamePicker();
   renderFeed();
   if (!byId('serMap').tBodies[0].children.length || byId('serMap').dataset.sport !== L().sport) {
     byId('serMap').dataset.sport = L().sport;
@@ -1301,6 +1333,7 @@ byId('signOut').onclick = signOut;
     await Promise.all([liveDoc.start(), tickerDoc.start(), libraryDoc.start(), statsDoc.start()]);
     if (!liveDoc.ready) throw new Error('Could not load the game. Check the database connection and reload.');
     byId('app').hidden = false;
+    builder = initTeamBuilder({libraryDoc, liveDoc, statsDoc, change, cleanTeam, confirmBox, fail, loadProfile, photoData});
     setTab(local.get('tab', 'live'));
     const url = overlayUrl(overlayKey);
     byId('preview').src = url;

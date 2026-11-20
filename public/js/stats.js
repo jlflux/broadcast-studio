@@ -1,6 +1,7 @@
 import {$, $$, byId, clockText, copy, Doc, download, esc, getSession, onConnection, PHOTO_X, PHOTO_Y, photoPosition, readImage, remaining, serverNow, setText, toast, uid, validImage} from './common.js';
 import {boxScore, compareRows, describe, lineScore, parseRoster, points, score, statLine, teamFouls} from './stats-engine.js';
 import {defaultStats} from './defaults.js';
+import {pdfText} from './roster-import.js';
 
 const statsDoc = new Doc('stats', {onChange: () => render(), interval: 2000});
 const liveDoc = new Doc('live', {onChange: () => renderSync(), interval: 1000});
@@ -299,26 +300,6 @@ async function photo(ref) {
     if (response.ok) photos.set(ref, (await response.json()).doc.data);
   } catch {}
   return photos.get(ref);
-}
-
-async function pdfText(file) {
-  const pdfjs = await import('/vendor/pdf.min.mjs');
-  pdfjs.GlobalWorkerOptions.workerSrc = '/vendor/pdf.worker.min.mjs';
-  const pdf = await pdfjs.getDocument({data: new Uint8Array(await file.arrayBuffer())}).promise;
-  const lines = [];
-  for (let n = 1; n <= pdf.numPages; n++) {
-    const content = await (await pdf.getPage(n)).getTextContent();
-    const rows = new Map();
-    for (const item of content.items) {
-      if (!item.str?.trim()) continue;
-      const y = Math.round(item.transform[5] / 3);
-      if (!rows.has(y)) rows.set(y, []);
-      rows.get(y).push([item.transform[4], item.str.trim()]);
-    }
-    [...rows.entries()].sort((a, b) => b[0] - a[0]).forEach(([, items]) => lines.push(items.sort((a, b) => a[0] - b[0]).map(i => i[1]).join(' ')));
-  }
-  if (!lines.length) throw new Error('No text found in that PDF. Scanned PDFs are not supported; paste the roster instead.');
-  return lines.join('\n');
 }
 
 function addPlayers(team, list) {

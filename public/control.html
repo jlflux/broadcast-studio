@@ -14,7 +14,7 @@
   <div class="row">
     <span id="connection" class="connection" role="status">Connecting</span>
     <span id="serialChip" class="onair" hidden>SCOREBOARD</span>
-    <a href="/stats" target="_blank" rel="noopener">Stat keeper ↗</a>
+    <a href="/stats" target="_blank" rel="noopener" title="Open the stat keeper in its own window (for a second screen or tablet)">Stat keeper window ↗</a>
     <button id="copyOverlayTop" type="button">Copy OBS URL</button>
     <button id="signOut" type="button" class="ghost">Sign out</button>
   </div>
@@ -31,7 +31,7 @@
     <div class="row" id="statsSync" hidden><span class="muted" id="statsSyncText"></span><button id="statsSyncApply" type="button">Set scorebug to stats</button></div>
   </div>
   <nav class="tabs" aria-label="Sections">
-    <button data-tab="live" aria-current="page">Live</button><button data-tab="statgfx">Stat graphics</button><button data-tab="graphics">Graphics</button><button data-tab="ticker">Ticker</button><button data-tab="teams">Teams</button><button data-tab="style">Style</button><button data-tab="scoreboard">Scoreboard data</button>
+    <button data-tab="live" aria-current="page">Live</button><button data-tab="stats">Stat keeper</button><button data-tab="statgfx">Stat graphics</button><button data-tab="graphics">Graphics</button><button data-tab="ticker">Ticker</button><button data-tab="teams">Teams</button><button data-tab="builder">Team builder</button><button data-tab="style">Style</button><button data-tab="scoreboard">Scoreboard data</button>
   </nav>
   <div class="workspace">
     <div class="editor">
@@ -81,6 +81,9 @@
           </form>
         </section>
       </section>
+
+      <!-- STAT KEEPER (the /stats page, kept loaded while you use other tabs) -->
+      <section id="tab-stats" hidden><iframe id="statsFrame" title="Stat keeper"></iframe></section>
 
       <!-- STAT GRAPHICS -->
       <section id="tab-statgfx" hidden>
@@ -192,10 +195,18 @@
       <!-- TEAMS -->
       <section id="tab-teams" hidden>
         <section class="card">
-          <header><h2>Teams on the scorebug</h2><button type="button" id="swapTeams">⇄ Swap sides</button></header>
+          <header><h2>Today's game</h2><button type="button" id="gsBuilder">Edit saved teams in Team builder →</button></header>
+          <div class="grid2">
+            <label>Left team<select id="gsTeam0"></select><span class="hint" id="gsNote0" style="margin:4px 0 0"></span></label>
+            <label>Right team<select id="gsTeam1"></select><span class="hint" id="gsNote1" style="margin:4px 0 0"></span></label>
+          </div>
+          <div class="row" style="margin-top:12px"><button type="button" class="primary big" id="gsLoad">Load teams</button><span class="hint" style="margin:0">Loads each team's name, abbreviation, colors, logo, ranking, record and roster onto the scorebug and stat keeper.</span></div>
+        </section>
+        <section class="card">
+          <header><h2>Quick edit: teams on the scorebug</h2><button type="button" id="swapTeams">⇄ Swap sides</button></header>
+          <p class="hint" style="margin-top:0">For last-minute changes to this game. Press Save team profile to keep a change for next time.</p>
           <form id="teamForm"><div class="grid2" id="teamEditors"></div><div class="row" style="margin-top:12px"><button class="primary">Apply teams</button></div></form>
         </section>
-        <section class="card"><header><h2>Team profiles</h2><span class="muted">Logo, colors, record and roster</span></header><div id="teamLibrary" class="list"></div></section>
       </section>
 
       <!-- STYLE -->
@@ -244,6 +255,45 @@
       </section>
 
       <!-- SCOREBOARD -->
+      <!-- TEAM BUILDER -->
+      <section id="tab-builder" hidden>
+        <div class="builder">
+          <section class="card builderList">
+            <header><h2>Teams</h2><button type="button" class="primary" id="bNew">+ New team</button></header>
+            <input id="bSearch" type="search" placeholder="Search teams" aria-label="Search teams">
+            <div id="bTeams" class="list"></div>
+          </section>
+          <section class="card">
+            <p class="muted" id="bEmpty">Pick a team on the left, or make a new one. Everything here (info, logo, rosters) loads onto the scorebug and stat keeper when you pick the team for a game.</p>
+            <form id="bForm" hidden autocomplete="off">
+              <header><h2 id="bTitle">New team</h2><div class="row"><span class="muted" id="bDirty"></span><button type="button" class="ghost" id="bDelete">Delete team</button><button class="primary">Save team</button></div></header>
+              <div class="teamPreview" id="bPreview"><img alt="" hidden><strong></strong></div>
+              <div class="grid4" style="margin-top:12px">
+                <label>School / team name<input id="bName" maxlength="40" required></label>
+                <label>Abbreviation<input id="bShort" maxlength="5"></label>
+                <label>Ranking<input id="bRank" maxlength="3" placeholder="—"></label>
+                <label>Record<input id="bRecord" maxlength="12" placeholder="8-2"></label>
+              </div>
+              <div class="grid4" style="margin-top:10px">
+                <label>Main color<div class="colorPair"><input type="color" id="bColor"><input type="text" id="bColorHex" maxlength="7"></div></label>
+                <label>Edge stripe color<div class="colorPair"><input type="color" id="bAccent"><input type="text" id="bAccentHex" maxlength="7"></div></label>
+                <label>Logo<input type="file" id="bLogo" accept="image/png,image/jpeg,image/webp,image/svg+xml"></label>
+                <div style="align-self:end"><label class="check"><input type="checkbox" id="bBacking"> White circle behind logo</label><button type="button" class="ghost" id="bRemoveLogo">Remove logo</button></div>
+              </div>
+              <header style="margin-top:18px"><h2>Roster <span class="muted" id="bCount"></span></h2>
+                <div class="segmented" id="bSport" role="group" aria-label="Roster sport"><button type="button" data-sport="basketball">Basketball</button><button type="button" data-sport="football">Football</button></div></header>
+              <label>Paste players (one per line: "12 John Smith G Sr", or CSV with a header)<textarea id="bPaste" placeholder="10 Ben Baguley G Jr&#10;3 Zion Blaze PG Jr"></textarea></label>
+              <div class="row" style="margin-top:8px"><button type="button" id="bAddPasted">Add pasted players</button><label class="ghost" style="cursor:pointer">Import PDF or CSV…<input type="file" id="bImport" accept=".pdf,.csv,.txt,application/pdf,text/csv,text/plain" hidden></label><button type="button" id="bAddOne">+ Add one</button><button type="button" class="ghost" id="bClear">Clear roster</button></div>
+              <div class="rosterList" id="bRoster"></div>
+              <div class="between" style="margin-top:16px;border-top:1px solid var(--line);padding-top:12px">
+                <span class="hint" style="margin:0">Saving updates the scorebug and stat keeper if this team is in today's game.</span>
+                <div class="row"><span class="label" style="margin:0">Put in today's game</span><button type="button" data-use="0">Left side</button><button type="button" data-use="1">Right side</button></div>
+              </div>
+            </form>
+          </section>
+        </div>
+      </section>
+
       <section id="tab-scoreboard" hidden>
         <section class="card" id="feedCard">
           <header><h2>Scoreboard camera (ScoreSight)</h2><span class="onair" id="feedState">NO DATA YET</span></header>
@@ -304,6 +354,12 @@
     </aside>
   </div>
 </main>
+<dialog id="bPhotoDialog"><form method="dialog"><h2 id="bPhotoTitle">Player photo</h2>
+  <div class="photoEdit"><div class="photoSquare"><img id="bPhotoImg" alt=""></div>
+    <div class="stack"><label>Up/down<select id="bPhotoY"></select></label><label>Left/right<select id="bPhotoX"></select></label>
+      <p class="hint" style="margin:0">This is how the photo shows on graphics. If it gets cut off, pick which part to keep.</p></div></div>
+  <div class="row"><label class="ghost" style="cursor:pointer">Replace photo<input type="file" accept="image/*" hidden id="bPhotoReplace"></label><button type="button" class="ghost" id="bPhotoRemove">Remove photo</button><button value="ok" class="primary">Done</button></div>
+</form></dialog>
 <dialog id="confirmDialog"><form method="dialog"><h2 id="confirmTitle"></h2><p class="muted" id="confirmText"></p><div class="row"><button value="cancel">Cancel</button><button value="ok" class="danger" id="confirmOk">OK</button></div></form></dialog>
 </body>
 </html>
