@@ -35,6 +35,7 @@ export const defaultStyle = () => ({
   dark: '#101722',           // bug chrome color
   accent: '#f2a900',         // studio accent (banners, ticker label)
   possColor: '#e3262f',      // possession arrow / marker
+  shotColor: '#aeb8c6',      // basketball shot clock border (football uses the team with the ball)
   panel: '#f2f4f7',          // ribbon name plates / badge cards
 });
 
