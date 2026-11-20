@@ -286,9 +286,15 @@ function graphicContent(graphic, teams) {
   const fragment = [];
   if (graphic.type === 'player') {
     const card = node('player');
-    const hasPhoto = validImage(graphic.photo);
+    // No player photo: show the team's logo in the photo box instead (the number
+    // then sits beside the name, same as with a photo). No logo either: big number.
+    const team = teams?.[graphic.side];
+    const logo = !validImage(graphic.photo) && validImage(team?.logo) ? team.logo : '';
+    const hasPhoto = validImage(graphic.photo) || Boolean(logo);
     const photo = node('photo');
-    if (hasPhoto) {
+    if (logo) {
+      const img = document.createElement('img'); img.alt = ''; img.src = logo; img.className = 'teamLogo' + (team.logoBacking ? ' backed' : ''); photo.append(img);
+    } else if (hasPhoto) {
       const img = document.createElement('img'); img.alt = ''; img.src = graphic.photo; img.style.objectPosition = photoPosition(graphic.photoPos); photo.append(img);
     } else if (graphic.number) photo.append(node('num', '#' + graphic.number));
     else card.classList.add('noPhoto');

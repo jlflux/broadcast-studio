@@ -22,6 +22,10 @@ It runs on Vercel with a Neon Postgres database (the same setup as the Homewood 
 
 **Player photos.** Photos fill a fixed box on the left of player graphics (about square, as tall as the card), so a tall or wide picture never makes a graphic bigger. The whole photo is kept; you choose which part shows. In the stat keeper's **Rosters** tab, tap a player's photo to pick **Up/down** (top, center, bottom) and **Left/right** (left, center, right). The Graphics tab in the control panel has the same choices for a photo you upload there.
 
+**Team profiles.** In the control panel's **Teams** tab, **Save team profile** keeps a team's name, abbreviation, colors, logo, ranking and record, plus that side's roster from the stat keeper (one roster per sport). Next time you play them, pick the team and press **Load team**, or use **Use left / Use right** under **Team profiles**. The scorebug team and the stat keeper roster load together. If plays are already logged for that side, you're asked before the roster is replaced. Update a profile any time (new players, a new record) by saving it again. Rosters saved from the stat keeper's **Save roster** button belong to the same profile, matched by team name.
+
+**Player graphics without a photo** show the team's logo in the photo box, with the number beside the name. If the team has no logo either, the box shows the big number as before.
+
 **Ticker.** The `jlflux/ticker` score ticker, run from the panel instead of `config.js`. As a bottom bar it lifts the scorebug and lower thirds above it. It reads Google Sheets (the same template, `ticker-sheet-template.csv`), ESPN scoreboards, games typed into the panel, and optionally the game on the scorebug. Corner box or bottom bar.
 
 **Scoreboard data.** Takes readings from a ScoreSight camera feed, or reads the press-box scoreboard controller (FairPlay, Daktronics, etc.) over RS-232 through Chrome's Web Serial API: no local server or driver install beyond the USB-serial adapter. Map each value to a byte offset once (ASCII, BCD or binary). A live hex view highlights the bytes that change, and mappings can be saved and exported.

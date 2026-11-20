@@ -11,7 +11,7 @@ import {roleOf} from './feed.js';
 const liveDoc = new Doc('live', {onChange: () => render(), interval: 800});
 const tickerDoc = new Doc('ticker', {onChange: () => renderTicker(), interval: 5000});
 const libraryDoc = new Doc('library', {onChange: () => renderLibrary(), interval: 6000});
-const statsDoc = new Doc('stats', {onChange: () => { renderStatsLinks(); renderStatGraphics(); }, interval: 1500});
+const statsDoc = new Doc('stats', {onChange: () => { renderStatsLinks(); renderStatGraphics(); if (liveDoc.ready) renderTeamEditors(); }, interval: 1500});
 const L = () => liveDoc.doc;
 const G = () => L().games[L().sport];
 let overlayKey = '';
@@ -756,7 +756,8 @@ function teamEditor(i) {
     <div class="grid2">${colorField('color', 'Main color')}${colorField('accent', 'Edge stripe color')}</div>
     <label>Logo<input type="file" data-logo accept="image/png,image/jpeg,image/webp,image/svg+xml"></label>
     <div class="row"><label class="check"><input type="checkbox" data-k="logoBacking" ${t.logoBacking ? 'checked' : ''}> White circle behind logo</label><button type="button" class="ghost" data-remove-logo ${t.logo ? '' : 'disabled'}>Remove logo</button></div>
-    <div class="row"><select data-library aria-label="Load from library"></select><button type="button" data-load>Load</button><button type="button" data-save>Save to library</button></div>`;
+    <div class="row"><select data-library aria-label="Saved team profiles"></select><button type="button" data-load>Load team</button><button type="button" data-save>Save team profile</button></div>
+    <p class="hint" style="margin:6px 0 0">${esc(profileNote(i))}</p>`;
   $$('[data-k]', box).forEach(input => {
     input.oninput = () => {
       const key = input.dataset.k;
@@ -788,13 +789,9 @@ function teamEditor(i) {
   options($('[data-library]', box), library.length ? library.map(x => [x.id, x.name]) : [['', 'Library is empty']]);
   $('[data-load]', box).onclick = () => {
     const saved = library.find(x => x.id === $('[data-library]', box).value);
-    if (!saved) return;
-    teamDrafts[i] = {...copy(saved)};
-    delete teamDrafts[i].id;
-    teamsDirty = true;
-    renderTeamEditors(false);
+    if (saved) loadProfile(i, saved);
   };
-  $('[data-save]', box).onclick = () => saveTeamToLibrary(t);
+  $('[data-save]', box).onclick = () => saveTeamToLibrary(t, i);
   return box;
 }
 function refreshPreview(box, t) {
@@ -807,7 +804,7 @@ let teamsKey = '';
 function renderTeamEditors(fromLive = true) {
   if (fromLive) {
     if (teamsDirty) return;
-    const key = JSON.stringify([L().teams, (libraryDoc.doc?.teams || []).map(t => t.id)]);
+    const key = JSON.stringify([L().teams, (libraryDoc.doc?.teams || []).map(t => t.id), statsDoc.doc?.sport, statsDoc.doc?.teams.map(t => t.players.length)]);
     if (key === teamsKey) return;
     teamsKey = key;
     L().teams.forEach((team, i) => { teamDrafts[i] = copy(team); });
@@ -822,14 +819,59 @@ byId('teamForm').onsubmit = event => {
   event.preventDefault();
   change(d => { d.teams = teamDrafts.map(cleanTeam); }, 'Teams applied').then(ok => { if (ok) { teamsDirty = false; renderTeamEditors(); } });
 };
-function saveTeamToLibrary(t) {
+// ── Team profiles ──
+// A profile is a saved team (name, abbreviation, colors, logo, rank, record)
+// plus its saved roster for each sport. Rosters live in the library's roster
+// list, matched to the team by name, so rosters saved from the stat keeper
+// belong to the same profile.
+const rosterSport = () => statsDoc.doc?.sport || L().sport;
+const sameName = (a, b) => String(a || '').trim().toLowerCase() === String(b || '').trim().toLowerCase();
+const savedRoster = (name, sport = rosterSport()) => (libraryDoc.doc?.rosters || []).find(r => r.sport === sport && sameName(r.name, name));
+function profileNote(i) {
+  const players = statsDoc.doc?.teams[i]?.players.length || 0;
+  const sport = rosterSport();
+  return players
+    ? `Save team profile also saves this side's ${players}-player ${sport} roster from the stat keeper.`
+    : `No ${sport} roster on this side yet. Add one in the stat keeper's Rosters tab, then save the profile again.`;
+}
+
+async function loadProfile(side, saved) {
+  const {id, ...team} = saved;
+  const sport = rosterSport();
+  const roster = savedRoster(saved.name, sport);
+  let withRoster = Boolean(roster);
+  if (roster && statsDoc.doc?.events.some(e => e.team === side)) {
+    withRoster = await confirmBox(`Load ${saved.name}'s roster too?`,
+      `Plays are already logged for the ${side ? 'right' : 'left'} team in this stat game. Replacing its roster makes those plays show as "Unknown player".`, 'Load roster');
+  }
+  const where = side ? 'right' : 'left';
+  const message = withRoster ? `${saved.name} loaded on the ${where} with its ${roster.players.length}-player ${sport} roster`
+    : roster ? `${saved.name} loaded on the ${where} (roster kept as it was)`
+    : `${saved.name} loaded on the ${where}. No saved ${sport} roster yet`;
+  const ok = await change(d => { d.teams[side] = cleanTeam({...d.teams[side], ...team}); }, message);
+  if (!ok) return;
+  if (withRoster) await statsDoc.commit(s => { s.teams[side].players = copy(roster.players); }).catch(fail);
+  if (teamsDirty) { teamDrafts[side] = copy(L().teams[side]); renderTeamEditors(false); }
+  else { teamsKey = ''; renderTeamEditors(); }
+  renderLibrary();
+}
+
+function saveTeamToLibrary(t, side) {
   const team = cleanTeam(t);
+  const sport = rosterSport();
+  const players = statsDoc.doc?.teams[side]?.players || [];
   libraryDoc.commit(lib => {
-    const existing = lib.teams.find(x => x.name.toLowerCase() === team.name.toLowerCase());
+    const existing = lib.teams.find(x => sameName(x.name, team.name));
     if (existing) Object.assign(existing, team);
     else lib.teams.push({id: uid(), ...team});
     lib.teams.sort((a, b) => a.name.localeCompare(b.name));
-  }).then(() => toast(`${team.name} saved to library`)).catch(fail);
+    if (players.length) {
+      lib.rosters = lib.rosters || [];
+      const roster = lib.rosters.find(r => r.sport === sport && sameName(r.name, team.name));
+      if (roster) { roster.players = copy(players); roster.name = team.name; }
+      else lib.rosters.push({id: uid(), name: team.name, sport, players: copy(players)});
+    }
+  }).then(() => toast(players.length ? `${team.name} saved with its ${players.length}-player ${sport} roster` : `${team.name} saved (no ${sport} roster on this side yet)`)).catch(fail);
 }
 byId('swapTeams').onclick = async () => {
   const swapPair = list => [list[1], list[0]];
@@ -859,20 +901,19 @@ function renderLibrary() {
   if (liveDoc.ready) renderTeamEditors(!teamsDirty);
   const list = byId('teamLibrary');
   const teams = libraryDoc.doc?.teams || [];
-  if (!teams.length) list.innerHTML = '<p class="muted">Use "Save to library" on a team to keep its colors and logo.</p>';
+  if (!teams.length) list.innerHTML = '<p class="muted">Use "Save team profile" on a team to keep its colors, logo, record and roster.</p>';
   else list.replaceChildren(...teams.map(team => {
     const row = document.createElement('div');
     row.className = 'listRow';
-    row.innerHTML = `${validImage(team.logo) ? `<img src="${esc(team.logo)}" alt="">` : `<span class="swatch" style="--c:${esc(team.color)}"></span>`}<strong>${esc(team.name)} <span class="muted">${esc(team.short)}</span></strong>
+    const roster = savedRoster(team.name);
+    const details = [team.short, team.record, roster ? `${roster.players.length} players` : `no ${rosterSport()} roster`].filter(Boolean).join(' · ');
+    row.innerHTML = `${validImage(team.logo) ? `<img src="${esc(team.logo)}" alt="">` : `<span class="swatch" style="--c:${esc(team.color)}"></span>`}<strong>${esc(team.name)} <span class="muted">${esc(details)}</span></strong>
       <button type="button" data-side="0">Use left</button><button type="button" data-side="1">Use right</button><button type="button" class="ghost" data-delete aria-label="Delete">✕</button>`;
-    $$('[data-side]', row).forEach(b => {
-      b.onclick = () => {
-        const {id, ...rest} = team;
-        change(d => { d.teams[Number(b.dataset.side)] = cleanTeam({...d.teams[Number(b.dataset.side)], ...rest}); }, `${team.name} is on the ${b.dataset.side === '0' ? 'left' : 'right'}`)
-          .then(() => { teamsDirty = false; renderTeamEditors(); });
-      };
-    });
-    $('[data-delete]', row).onclick = () => libraryDoc.commit(lib => { lib.teams = lib.teams.filter(t => t.id !== team.id); }).catch(fail);
+    $$('[data-side]', row).forEach(b => { b.onclick = () => loadProfile(Number(b.dataset.side), team); });
+    $('[data-delete]', row).onclick = async () => {
+      if (!await confirmBox(`Delete ${team.name}?`, 'This removes the saved team and its saved rosters. Teams already on the scorebug stay.', 'Delete')) return;
+      libraryDoc.commit(lib => { lib.teams = lib.teams.filter(t => t.id !== team.id); lib.rosters = (lib.rosters || []).filter(r => !sameName(r.name, team.name)); }).catch(fail);
+    };
     return row;
   }));
   renderSerialProfiles();

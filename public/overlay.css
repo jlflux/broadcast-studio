@@ -255,6 +255,8 @@ html,body{width:100%;height:100%;margin:0;overflow:hidden;background:transparent
 .player{min-height:170px}
 .player .photo{width:170px;align-self:stretch;background:linear-gradient(180deg,var(--g),var(--g-dark,#222));overflow:hidden;position:relative}
 .player .photo img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center top}
+.player .photo img.teamLogo{inset:22px;width:calc(100% - 44px);height:calc(100% - 44px);object-fit:contain;object-position:center;filter:drop-shadow(0 3px 8px #0006)}
+.player .photo img.teamLogo.backed{inset:auto;left:50%;top:50%;width:124px;height:124px;transform:translate(-50%,-50%);background:#fff;border-radius:50%;padding:12px;box-sizing:border-box}
 .player .photo .num{position:absolute;inset:0;display:grid;place-items:center;font-size:96px;font-weight:800;color:#ffffffd8}
 .player .body{display:flex;flex-direction:column;min-width:0}
 .player .who{padding:14px 24px 10px;border-top:5px solid var(--g);background:linear-gradient(105deg,var(--g-mid,#3a4250),#141d2b 75%)}
