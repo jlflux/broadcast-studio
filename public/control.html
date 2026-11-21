@@ -66,22 +66,6 @@
               <div class="actions" id="gActions"></div>
               <div class="recent" id="gRecent"></div>
             </section>
-            <section class="card">
-              <header><h2>Game situation</h2><button type="button" id="nextPeriod">Next period →</button></header>
-              <div class="sitPick"><span class="label">Period</span><div class="segmented" id="periodButtons" role="group" aria-label="Period"></div></div>
-              <div class="sitPick football" id="possLabel"><span class="label">Possession</span><div class="segmented" id="possessionButtons" role="group" aria-label="Possession"></div></div>
-              <div class="sitPick hoops"><span class="label">Possession arrow</span><div class="segmented" id="arrowButtons" role="group" aria-label="Possession arrow"></div></div>
-              <div class="football" style="margin-top:10px">
-                <div class="row" id="downButtons"></div>
-                <div class="grid3" style="margin-top:10px">
-                  <form id="distanceForm"><label for="distanceInput">Yards to go</label><div class="inline" style="margin-top:4px"><input id="distanceInput" maxlength="4" placeholder="10 or Goal" required><button>Set</button></div></form>
-                  <form id="ballOnForm"><label for="ballOnInput">Ball on (corner layout)</label><div class="inline" style="margin-top:4px"><input id="ballOnInput" maxlength="12" placeholder="WES 34"><button>Set</button></div></form>
-                  <div><span class="label">Quick</span><div class="row" style="margin-top:4px"><button type="button" id="firstTen">1st &amp; 10</button><button type="button" id="goal">&amp; Goal</button></div></div>
-                </div>
-              </div>
-              <p class="muted football" style="margin-top:8px">Down &amp; distance shows on the bug only while a team has possession.</p>
-              <div style="margin-top:12px"><span class="label">Status (pops out of the clock box)</span><div class="row" id="statusButtons" style="margin-top:5px"></div></div>
-            </section>
           </div>
           <div class="gameSide"><div id="teamCardSlot1"></div><div class="side" id="gside1"></div></div>
         </div>
@@ -360,6 +344,22 @@
         <div class="onAirLine"><div><span class="label">Graphic</span><strong id="graphicLive">None</strong></div><button type="button" id="monitorClearGraphic">Clear</button></div>
         <div class="onAirLine"><div><span class="label">Banner</span><strong id="bannerLive">None</strong></div><button type="button" id="monitorClearBanner">Clear</button></div>
         <div class="onAirLine"><div><span class="label">Ticker</span><strong id="tickerLive">Off</strong></div><button type="button" id="monitorTicker">Show</button></div>
+      </section>
+      <section class="card sitCard">
+        <header><h2>Game situation</h2><button type="button" id="nextPeriod">Next period →</button></header>
+        <div class="sitPick"><span class="label">Period</span><div class="segmented" id="periodButtons" role="group" aria-label="Period"></div></div>
+        <div class="sitPick football" id="possLabel"><span class="label">Possession</span><div class="segmented" id="possessionButtons" role="group" aria-label="Possession"></div></div>
+        <div class="sitPick hoops"><span class="label">Possession arrow</span><div class="segmented" id="arrowButtons" role="group" aria-label="Possession arrow"></div></div>
+        <div class="football" style="margin-top:10px">
+          <div class="row" id="downButtons"></div>
+          <div class="grid3" style="margin-top:10px">
+            <form id="distanceForm"><label for="distanceInput">Yards to go</label><div class="inline" style="margin-top:4px"><input id="distanceInput" maxlength="4" placeholder="10 or Goal" required><button>Set</button></div></form>
+            <form id="ballOnForm"><label for="ballOnInput">Ball on (corner layout)</label><div class="inline" style="margin-top:4px"><input id="ballOnInput" maxlength="12" placeholder="WES 34"><button>Set</button></div></form>
+            <div><span class="label">Quick</span><div class="row" style="margin-top:4px"><button type="button" id="firstTen">1st &amp; 10</button><button type="button" id="goal">&amp; Goal</button></div></div>
+          </div>
+        </div>
+        <p class="muted football" style="margin-top:8px">Down &amp; distance shows on the bug only while a team has possession.</p>
+        <div style="margin-top:12px"><span class="label">Status (pops out of the clock box)</span><div class="row" id="statusButtons" style="margin-top:5px"></div></div>
       </section>
       <section class="card keys">
         <header><h2>Keyboard</h2><label class="check"><input type="checkbox" id="keysOn"> Enable</label></header>
