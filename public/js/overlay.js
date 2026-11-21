@@ -241,10 +241,14 @@ function paintBanner() {
   const banner = live.banner;
   const show = layers.has('banner') && banner && (!banner.until || now() < banner.until);
   if (!show) { element.hidden = true; element.dataset.id = ''; return; }
-  const color = banner.side >= 0 ? live.teams[banner.side].color : live.style.accent;
+  // Saved banners can carry their own colors and a sponsor logo.
+  const color = banner.color || (banner.side >= 0 ? live.teams[banner.side].color : live.style.accent);
   element.style.setProperty('--b', color);
   element.style.setProperty('--b-dark', shade(color, 0.72));
-  element.style.setProperty('--b-ink', readable(color));
+  element.style.setProperty('--b-ink', banner.textColor || readable(color));
+  const img = byId('bannerImage');
+  img.hidden = !validImage(banner.image);
+  if (validImage(banner.image) && img.getAttribute('src') !== banner.image) img.src = banner.image;
   element.classList.toggle('small', live.style.layout === 'corner');
   if (element.dataset.id !== banner.id) {
     element.dataset.id = banner.id;

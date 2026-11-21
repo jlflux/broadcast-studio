@@ -8,7 +8,7 @@ It runs on Vercel with a Neon Postgres database (the same setup as the Homewood 
 
 | Page | What it does |
 |---|---|
-| `/control` | Control panel. **Live** is one game screen: each team's score, timeouts, fouls and roster on its side; clock, stat pad and game situation in the middle; program monitor across the top. Also: box score & plays, stat graphics, graphics, ticker, teams, team builder, style, and scoreboard serial import |
+| `/control` | Control panel. **Live** is one game screen: each team's score, timeouts, fouls and roster on its side; clock, stat pad and game situation in the middle; program monitor across the top. Also: **Box score & plays** (line score, team stats, box score with On air buttons, play-by-play with delete, CSV export, backup/restore, new stat game) for the active game, stat graphics, graphics, ticker, teams, team builder, style, and scoreboard serial import |
 | `/stats` | Stat keeper: rosters, tap-player-then-action stat entry, box score, play-by-play. Sends the score (and basketball team fouls) to the scorebug. Play entry is also built into the control panel's Live tab; the box score, play-by-play and rosters are in its **Box score & plays** tab. Open `/stats` on its own for a second screen or tablet |
 | `/overlay` | The OBS Browser Source (1920 × 1080, transparent) |
 
@@ -25,6 +25,10 @@ It runs on Vercel with a Neon Postgres database (the same setup as the Homewood 
 **Teams.** Build teams once in the control panel's **Team builder** tab: name, abbreviation, ranking, record, colors, logo, and a basketball and a football roster (paste, PDF/CSV import, or one at a time, with player photos and photo alignment). On game day, open **Teams → Today's game**, pick the left and right teams, and press **Load teams**: the scorebug gets each team's info and logo, and the stat keeper gets the roster for the current sport (empty if the team has none saved, so the last opponent's players don't stay behind). If plays are already logged for a side, you're asked before its roster is replaced. Editing a team that's in today's game updates the scorebug and stat keeper when you save. **Quick edit** on the Teams tab changes this game only; **Save team profile** there writes the change back to the saved team. Rosters saved with the stat keeper's **Save roster** button are the same rosters, matched by team name.
 
 **Player graphics without a photo** show the team's logo in the photo box, with the number beside the name. If the team has no logo either, the box shows the big number as before.
+
+**Saved banners.** In **Graphics → Banners**, write a banner (use {TEAM} for the team name), pick team color or custom background and text colors, add an optional sponsor logo, set how many seconds it stays up, and save it. Saved banners appear as buttons in the **Banner** section on Live. **Clear all fields** on the Graphics tab empties the graphic form so nothing from the last graphic carries over.
+
+**One sport switch.** The Football / Basketball switch at the top of the control panel moves the scorebug and the stats together. If plays are logged, it asks first and keeps a backup of the old stat game in the browser.
 
 **Ticker.** The `jlflux/ticker` score ticker, run from the panel instead of `config.js`. As a bottom bar it lifts the scorebug and lower thirds above it. It reads Google Sheets (the same template, `ticker-sheet-template.csv`), ESPN scoreboards, games typed into the panel, and optionally the game on the scorebug. Corner box or bottom bar.
 
