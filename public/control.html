@@ -71,6 +71,7 @@
         </div>
         <section class="card">
           <header><h2>Banner</h2><span class="muted">Shows next to the scorebug</span></header>
+          <div class="row" id="bannerSaved"></div>
           <div class="row" id="bannerQuick"></div>
           <form id="bannerForm" class="grid3" style="margin-top:10px;align-items:end">
             <label style="grid-column:span 1">Message<input id="bannerText" maxlength="60" placeholder="TOUCHDOWN {TEAM}" required></label>
@@ -80,8 +81,18 @@
         </section>
       </section>
 
-      <!-- BOX SCORE & PLAYS: the stat keeper page (box score, play-by-play, rosters), kept loaded -->
-      <section id="tab-stats" hidden><iframe id="statsFrame" title="Box score and plays"></iframe></section>
+      <!-- BOX SCORE & PLAYS for the active stat game -->
+      <section id="tab-stats" hidden>
+        <section class="card">
+          <header><h2>This game's stats</h2><span class="muted" id="bxInfo"></span></header>
+          <div class="row"><button type="button" class="primary" id="bxCompare">Put team stats on air</button><button type="button" id="bxCsv">Export CSV</button>
+            <button type="button" id="bxBackup">Download backup</button><label class="ghost" style="cursor:pointer">Restore backup…<input type="file" id="bxRestore" accept="application/json" hidden></label>
+            <button type="button" class="danger" id="bxNew">Start new stat game…</button></div>
+          <p class="hint" style="margin:8px 0 0">Stats follow the Football / Basketball switch at the top. Starting a new stat game clears the plays; rosters stay.</p>
+        </section>
+        <div class="boxGrid"><div id="bxBox"></div>
+          <section class="card"><header><h2>Play-by-play</h2><span class="muted">Deleting a play recalculates every total</span></header><div id="bxPlays"></div></section></div>
+      </section>
 
       <!-- STAT GRAPHICS -->
       <section id="tab-statgfx" hidden>
@@ -116,7 +127,7 @@
           </div>
         </section>
         <section class="card">
-          <header><h2>Graphic</h2><div class="segmented" id="graphicType"><button type="button" data-type="player">Player</button><button type="button" data-type="compare">Team compare</button><button type="button" data-type="message">Message / sponsor</button></div></header>
+          <header><h2>Graphic</h2><div class="row"><button type="button" class="ghost" id="gBlank" title="Empty every field so nothing from the last graphic carries over">Clear all fields</button><div class="segmented" id="graphicType"><button type="button" data-type="player">Player</button><button type="button" data-type="compare">Team compare</button><button type="button" data-type="message">Message / sponsor</button></div></div></header>
           <form id="graphicForm" class="stack">
             <div class="grid3">
               <label>Label (small, above)<input id="gKicker" maxlength="40" placeholder="QUARTERBACK"></label>
@@ -145,6 +156,25 @@
           </form>
         </section>
         <section class="card"><header><h2>Saved presets</h2></header><div id="presets" class="list"></div></section>
+        <section class="card">
+          <header><h2>Banners</h2><span class="muted">Saved banners show up as buttons in the Banner section on Live</span></header>
+          <form id="bnForm" class="stack" autocomplete="off">
+            <div class="grid4">
+              <label style="grid-column:span 2">Message<input id="bnText" maxlength="60" placeholder="3-POINTER! BROUGHT TO YOU BY ACME" required><span class="hint" style="margin:2px 0 0">{TEAM} becomes the team name.</span></label>
+              <label>Colors<select id="bnMode"><option value="team">Team color (picked on Live)</option><option value="custom">Custom colors</option></select></label>
+              <label>Seconds<input id="bnSeconds" type="number" min="0" max="120" placeholder="8" title="0 keeps it up until cleared"></label>
+            </div>
+            <div class="grid4">
+              <label class="bnCustom">Background<div class="inline"><input type="color" id="bnColor" value="#f2a900"></div></label>
+              <label class="bnCustom">Text<div class="inline"><input type="color" id="bnTextColor" value="#111111"></div></label>
+              <label>Sponsor logo (optional)<input id="bnImage" type="file" accept="image/png,image/jpeg,image/webp,image/svg+xml"></label>
+              <div style="align-self:end"><button type="button" class="ghost" id="bnImageClear">Remove logo</button></div>
+            </div>
+            <div class="bnPreviewWrap"><span class="label">Preview</span><div class="bnPreview" id="bnPreview"><img alt="" hidden><span></span></div></div>
+            <div class="row"><button class="primary" id="bnSave">Save banner</button><button type="button" id="bnShow">Show now</button><button type="button" class="ghost" id="bnNew">New banner</button><span class="muted" id="bnEditing"></span></div>
+          </form>
+          <div id="bnList" class="list" style="margin-top:12px"></div>
+        </section>
       </section>
 
       <!-- TICKER -->

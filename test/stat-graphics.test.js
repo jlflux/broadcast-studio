@@ -136,3 +136,14 @@ test('server accepts a shot clock color and rejects junk', async () => {
   assert.equal(validLive({...live, style: older}), true, 'older saved styles without the setting still load');
   assert.equal(validLive({...live, style: {...live.style, shotColor: 'red; display:none'}}), false);
 });
+
+test('server accepts saved-banner colors and logo, rejects junk', async () => {
+  const {validLive} = await import('../lib/validate.js');
+  const {defaultLive} = await import('../lib/defaults.js');
+  const live = defaultLive();
+  const banner = {id: 'b', text: '3-POINTER', side: 0, until: 0};
+  assert.equal(validLive({...live, banner}), true, 'plain banner still fine');
+  assert.equal(validLive({...live, banner: {...banner, color: '#0b6e3a', textColor: '#ffffff', image: 'data:image/png;base64,AAAA'}}), true);
+  assert.equal(validLive({...live, banner: {...banner, color: 'green;'}}), false);
+  assert.equal(validLive({...live, banner: {...banner, image: 'javascript:alert(1)'}}), false);
+});

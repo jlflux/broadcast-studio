@@ -6,6 +6,7 @@ import {boxScore, compareRows, score as statsScore, statLine} from './stats-engi
 import {playerBase, playerGraphics, teamGraphics} from './stat-graphics.js';
 import {initTeamBuilder} from './team-builder.js';
 import {createStatEntry} from './stat-entry.js';
+import {boxCsv, renderBoxScore, renderPlays} from './box-view.js';
 import {defaultStats} from './defaults.js';
 import {ENCODINGS, FIELDS, SerialReader, decodeRaw, interpret, parseHex} from './serial.js';
 import {roleOf} from './feed.js';
@@ -14,7 +15,7 @@ import {roleOf} from './feed.js';
 const liveDoc = new Doc('live', {onChange: () => render(), interval: 800});
 const tickerDoc = new Doc('ticker', {onChange: () => renderTicker(), interval: 5000});
 const libraryDoc = new Doc('library', {onChange: () => renderLibrary(), interval: 6000});
-const statsDoc = new Doc('stats', {onChange: () => { renderStatsLinks(); renderStatGraphics(); renderGame(); if (liveDoc.ready) renderTeamEditors(); }, interval: 1500});
+const statsDoc = new Doc('stats', {onChange: () => { renderStatsLinks(); renderStatGraphics(); renderGame(); renderBoxTab(); if (liveDoc.ready) renderTeamEditors(); }, interval: 1500});
 const L = () => liveDoc.doc;
 const G = () => L().games[L().sport];
 let overlayKey = '';
@@ -76,25 +77,13 @@ function setTab(tab) {
   document.body.classList.toggle('wideTab', WIDE_TABS.includes(tab));
   document.body.classList.toggle('liveTab', tab === 'live'); // program monitor moves to a strip on top
   local.set('tab', tab);
-  if (tab === 'stats') openStatsFrame();
+  if (tab === 'stats') renderBoxTab();
   if (tab === 'builder') builder?.show();
   if (tab === 'statgfx') renderStatGraphics(true);
 }
 $$('nav.tabs [data-tab]').forEach(b => { b.onclick = () => setTab(b.dataset.tab); });
 
-// The stat keeper runs inside the control panel in a frame. It loads the first
-// time the tab opens and then stays running, so switching tabs never loses a play.
-function openStatsFrame() {
-  const frame = byId('statsFrame');
-  if (!frame.src) frame.src = '/stats?embed=1'; // box score, play-by-play and rosters (plays are entered on Live)
-  fitStatsFrame();
-}
-function fitStatsFrame() {
-  const frame = byId('statsFrame');
-  if (byId('tab-stats').hidden) return;
-  frame.style.height = Math.max(480, innerHeight - frame.getBoundingClientRect().top - 10) + 'px';
-}
-addEventListener('resize', fitStatsFrame);
+
 
 // ── Live tab ────────────────────────────────────────────────────────────────
 const PERIODS = {
@@ -218,16 +207,106 @@ function nextPeriod() {
   });
 }
 
-function showBanner(template, side) {
+// extra: {color, textColor, image, seconds} from a saved banner.
+function showBanner(template, side, extra = {}) {
   const d = L();
   const team = side >= 0 ? d.teams[side].name.toUpperCase() : '';
   const text = template.replace(/\{TEAM\}/g, team).replace(/\s+/g, ' ').trim().slice(0, 80);
   if (!text) return;
-  const seconds = Number(byId('bannerSeconds').value);
+  const seconds = extra.seconds ?? Number(byId('bannerSeconds').value);
+  const look = {};
+  if (extra.color) { look.color = extra.color; look.textColor = extra.textColor || ''; }
+  if (extra.image) look.image = extra.image;
   change(draft => {
-    draft.banner = {id: uid(), text, side, until: seconds > 0 ? serverNow() + seconds * 1000 : 0};
+    draft.banner = {id: uid(), text, side, until: seconds > 0 ? serverNow() + seconds * 1000 : 0, ...look};
   });
 }
+
+// ── Saved banners (built on the Graphics tab, shown from Live) ──
+const savedBanners = () => libraryDoc.doc?.banners || [];
+const bannerLook = b => (b.mode === 'custom' ? {color: b.color, textColor: b.textColor} : {});
+function showSavedBanner(b) {
+  showBanner(b.text, Number(byId('bannerSide').value), {...bannerLook(b), image: b.image || '', seconds: Number.isFinite(b.seconds) ? b.seconds : undefined});
+}
+function renderSavedBanners() {
+  const row = byId('bannerSaved');
+  const list = savedBanners();
+  row.hidden = !list.length;
+  row.innerHTML = list.length ? '<span class="label" style="margin:0 4px 0 0">Saved</span>' + list.map(b => `<button type="button" data-saved-banner="${esc(b.id)}" class="savedBanner" style="${b.mode === 'custom' ? `--bn:${esc(b.color)};--bn-ink:${esc(b.textColor)}` : ''}">${esc(b.text.replace('{TEAM}', '…'))}</button>`).join('') : '';
+  $$('[data-saved-banner]', row).forEach(btn => { btn.onclick = () => { const b = list.find(x => x.id === btn.dataset.savedBanner); if (b) showSavedBanner(b); }; });
+  renderBannerBuilderList();
+}
+
+let bnDraft = null;
+const bnBlank = () => ({id: null, text: '', mode: 'team', color: '#f2a900', textColor: '#111111', image: '', seconds: null});
+function bnLoad(b) {
+  bnDraft = copy(b);
+  byId('bnText').value = b.text;
+  byId('bnMode').value = b.mode;
+  byId('bnColor').value = b.color;
+  byId('bnTextColor').value = b.textColor;
+  byId('bnSeconds').value = Number.isFinite(b.seconds) ? b.seconds : '';
+  byId('bnImage').value = '';
+  setText('bnEditing', b.id ? `Editing "${b.text}"` : '');
+  bnPreview();
+}
+function bnRead() {
+  const seconds = byId('bnSeconds').value.trim();
+  Object.assign(bnDraft, {text: byId('bnText').value.trim().slice(0, 60), mode: byId('bnMode').value, color: byId('bnColor').value,
+    textColor: byId('bnTextColor').value, seconds: seconds === '' ? null : clamp(Number(seconds) || 0, 0, 120)});
+}
+function bnPreview() {
+  const custom = byId('bnMode').value === 'custom';
+  $$('.bnCustom').forEach(el => { el.hidden = !custom; });
+  const side = liveDoc.ready ? L().teams[0] : null;
+  const bg = custom ? byId('bnColor').value : side?.color || '#f2a900';
+  const preview = byId('bnPreview');
+  preview.style.setProperty('--bn', bg);
+  preview.style.setProperty('--bn-dark', shade(bg, 0.72));
+  preview.style.setProperty('--bn-ink', custom ? byId('bnTextColor').value : readable(bg));
+  $('span', preview).textContent = (byId('bnText').value || 'Your banner').replace(/\{TEAM\}/g, side ? side.name : 'TEAM');
+  const img = $('img', preview);
+  img.hidden = !validImage(bnDraft.image);
+  if (validImage(bnDraft.image)) img.src = bnDraft.image;
+  byId('bnImageClear').disabled = !bnDraft.image;
+}
+function renderBannerBuilderList() {
+  const box = byId('bnList');
+  const list = savedBanners();
+  if (!list.length) { box.innerHTML = '<p class="muted">No saved banners yet.</p>'; return; }
+  box.replaceChildren(...list.map(b => {
+    const row = document.createElement('div');
+    row.className = 'listRow';
+    row.innerHTML = `<span class="savedBanner" style="${b.mode === 'custom' ? `--bn:${esc(b.color)};--bn-ink:${esc(b.textColor)}` : ''}">${b.image ? '★ ' : ''}${esc(b.text)}</span><strong class="muted">${b.mode === 'custom' ? 'Custom colors' : 'Team color'}${Number.isFinite(b.seconds) ? ` · ${b.seconds ? b.seconds + ' sec' : 'stays up'}` : ''}${b.image ? ' · logo' : ''}</strong>
+      <button type="button" class="primary" data-act="show">Show</button><button type="button" data-act="edit">Edit</button><button type="button" class="ghost" data-act="delete" aria-label="Delete">✕</button>`;
+    $('[data-act=show]', row).onclick = () => showSavedBanner(b);
+    $('[data-act=edit]', row).onclick = () => bnLoad(b);
+    $('[data-act=delete]', row).onclick = async () => {
+      if (!await confirmBox(`Delete "${b.text}"?`, 'This removes the saved banner.', 'Delete')) return;
+      libraryDoc.commit(lib => { lib.banners = (lib.banners || []).filter(x => x.id !== b.id); }).then(() => { if (bnDraft?.id === b.id) bnLoad(bnBlank()); }).catch(fail);
+    };
+    return row;
+  }));
+}
+bnLoad(bnBlank());
+byId('bnForm').oninput = () => { bnRead(); bnPreview(); };
+byId('bnImage').onchange = async event => {
+  try { bnDraft.image = await readImage(event.target.files[0], {maxWidth: 480, maxHeight: 120}); bnPreview(); } catch (error) { fail(error); }
+};
+byId('bnImageClear').onclick = () => { bnDraft.image = ''; byId('bnImage').value = ''; bnPreview(); };
+byId('bnNew').onclick = () => bnLoad(bnBlank());
+byId('bnShow').onclick = () => { bnRead(); if (bnDraft.text) showSavedBanner(bnDraft); };
+byId('bnForm').onsubmit = event => {
+  event.preventDefault();
+  bnRead();
+  if (!bnDraft.text) return;
+  const saved = {...bnDraft, id: bnDraft.id || uid()};
+  libraryDoc.commit(lib => {
+    lib.banners = lib.banners || [];
+    const i = lib.banners.findIndex(b => b.id === saved.id);
+    if (i >= 0) lib.banners[i] = saved; else lib.banners.push(saved);
+  }).then(() => { bnLoad(saved); toast(`Banner saved. It's on the Live tab under Banner.`); }).catch(fail);
+};
 
 function renderLive() {
   const d = L();
@@ -300,10 +379,19 @@ function tick() {
 }
 setInterval(tick, 100);
 
-byId('sportPicker').onclick = event => {
+// The top Football / Basketball switch moves everything: scorebug and stats.
+// With plays logged it asks first (the old stat game is backed up in this browser).
+byId('sportPicker').onclick = async event => {
   const sport = event.target.dataset?.sport;
   if (!sport || sport === L().sport) return;
-  change(d => { d.sport = sport; }, `Switched to ${sport}. Team names, colors and logos stay.`);
+  const stats = statsDoc.ready ? statsDoc.doc : null;
+  let moveStats = Boolean(stats && stats.sport !== sport);
+  if (moveStats && stats.events.length) {
+    moveStats = await confirmBox(`Switch stats to ${sport} too?`, `The ${stats.sport} stat game has ${stats.events.length} plays. It's saved in this browser as a backup (and you can download it from Box score & plays first), then a new ${sport} stat game starts with each team's saved ${sport} roster.`, 'Switch stats');
+    if (moveStats) local.set('statsBackup', stats);
+  }
+  const ok = await change(d => { d.sport = sport; }, `Switched to ${sport}. Team names, colors and logos stay.`);
+  if (ok && moveStats) switchStatsSport(sport);
 };
 byId('bugToggle').onclick = () => change(d => { d.bugVisible = !d.bugVisible; });
 byId('gameToggle').onclick = () => toggleClock('game');
@@ -412,6 +500,15 @@ $$('#graphicType [data-type]').forEach(b => {
   };
 });
 byId('graphicForm').oninput = () => readDraftForm();
+// Empties every field (keeps the graphic type and color side) so nothing from
+// the last graphic carries over by accident. Doesn't touch what's on air.
+byId('gBlank').onclick = () => {
+  draft = {type: draft.type, side: draft.side, kicker: '', title: '', subtitle: '', number: '', stat: '', photo: '', photoPos: '', image: '', rows: []};
+  local.set('draft', draft);
+  loadDraftForm();
+  byId('gImage').value = '';
+  toast('Fields cleared');
+};
 ['gPhotoX', 'gPhotoY'].forEach(id => byId(id).addEventListener('change', () => {
   draft.photoPos = `${byId('gPhotoX').value} ${byId('gPhotoY').value}`;
   local.set('draft', draft);
@@ -596,6 +693,39 @@ async function switchStatsSport(sport) {
 }
 byId('gUndo').onclick = () => gameEntry.undo();
 byId('gAutoSend').onchange = event => statsDoc.commit(s => { s.autoSend = event.target.checked; }).catch(fail);
+
+// ── Box score & plays tab ───────────────────────────────────────────────────
+const boxTeams = {name: i => L().teams[i].name, short: i => L().teams[i].short, color: i => L().teams[i].color};
+function renderBoxTab() {
+  if (!liveDoc.ready || !statsDoc.ready || byId('tab-stats').hidden) return;
+  const stats = statsDoc.doc;
+  setText('bxInfo', `${stats.sport === 'football' ? 'Football' : 'Basketball'} · ${stats.events.length} plays${stats.sport !== L().sport ? ` · the scorebug is on ${L().sport}` : ''}`);
+  // "On air" next to a player takes their game line (same as Stat graphics → Game line)
+  renderBoxScore(byId('bxBox'), stats, boxTeams, stats.sport === 'basketball' ? (team, id) => sgTake({scope: 'player', key: 'line', team, id}) : null);
+  renderPlays(byId('bxPlays'), stats, boxTeams, id => statsDoc.commit(s => { s.events = s.events.filter(e => e.id !== id); })
+    .then(() => gameEntry.sendToBug(false, true)).catch(fail));
+}
+byId('bxCompare').onclick = () => {
+  if (statsDoc.doc.sport === 'basketball') { sgTake({scope: 'team', key: 'compare'}); return; }
+  const g = L().games[statsDoc.doc.sport];
+  change(d => { d.graphic = {type: 'compare', side: -1, title: 'Team Stats', kicker: g.period === 'HALF' ? 'Halftime' : g.period === 'FINAL' ? 'Final' : '', subtitle: '',
+    rows: compareRows(statsDoc.doc.sport, boxScore(statsDoc.doc.sport, statsDoc.doc)), id: uid(), until: serverNow() + 12000}; }, 'Team stats are on air');
+};
+byId('bxCsv').onclick = () => download(`box-score-${statsDoc.doc.sport}-${new Date().toISOString().slice(0, 10)}.csv`, boxCsv(statsDoc.doc, boxTeams), 'text/csv');
+byId('bxBackup').onclick = () => download(`stats-${statsDoc.doc.sport}-${new Date().toISOString().slice(0, 10)}.json`, JSON.stringify(statsDoc.doc, null, 1), 'application/json');
+byId('bxRestore').onchange = async event => {
+  try {
+    const data = JSON.parse(await event.target.files[0].text());
+    if (!Array.isArray(data.events) || !Array.isArray(data.teams)) throw new Error('That file is not a stat keeper backup.');
+    if (await confirmBox('Restore this backup?', `It replaces the current stat game with ${data.events.length} plays.`, 'Restore')) await statsDoc.commit(s => { Object.assign(s, data); });
+  } catch (error) { fail(error); }
+  event.target.value = '';
+};
+byId('bxNew').onclick = async () => {
+  if (!await confirmBox('Start a new stat game?', 'Every logged play is cleared. Rosters stay.', 'Clear plays')) return;
+  local.set('statsBackup', statsDoc.doc);
+  statsDoc.commit(s => { s.events = []; s.startedAt = 0; }).then(() => toast('New stat game. The old one is saved in this browser as a backup.')).catch(fail);
+};
 
 // ── Stat graphics tab ───────────────────────────────────────────────────────
 // Pick a player (or a team graphic), see it in the preview with the numbers
@@ -1030,6 +1160,7 @@ byId('swapTeams').onclick = async () => {
 
 function renderLibrary() {
   renderPresets();
+  renderSavedBanners();
   builder?.refresh();
   renderGamePicker();
   if (liveDoc.ready) renderTeamEditors(!teamsDirty);

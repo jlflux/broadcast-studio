@@ -222,6 +222,8 @@ html,body{width:100%;height:100%;margin:0;overflow:hidden;background:transparent
 /* ── Banner ──────────────────────────────────────────────────────────────── */
 .banner{min-width:420px;max-width:1000px;padding:6px 30px;border-radius:9px;background:linear-gradient(180deg,var(--b,#f2a900),var(--b-dark,#ae7900));color:var(--b-ink,#111);font-weight:800;font-size:38px;letter-spacing:.05em;text-transform:uppercase;text-align:center;white-space:nowrap;box-shadow:0 6px 18px #0007;animation:bannerIn .4s cubic-bezier(.2,.8,.2,1) both}
 .corner~.banner,.banner.small{font-size:28px;min-width:300px}
+.banner{display:flex;align-items:center;justify-content:center;gap:16px}
+.banner img{height:1.25em;max-width:240px;object-fit:contain;flex:0 0 auto}
 @keyframes bannerIn{from{opacity:0;transform:scaleX(.6)}to{opacity:1;transform:none}}
 
 /* ── Graphics (lower thirds) ────────────────────────────────────────────── */

@@ -93,7 +93,10 @@ legend{font-size:12px;color:#c1cddb;padding:0 4px}
 /* Full-width tabs (Stat keeper, Team builder): hide the program monitor column */
 body.wideTab .workspace{grid-template-columns:minmax(0,1fr)}
 body.wideTab .workspace>aside{display:none}
-#statsFrame{display:block;width:100%;border:1px solid var(--line);border-radius:10px;background:var(--bg,#0b1018)}
+/* Box score & plays */
+.boxGrid{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(300px,1fr);gap:12px;align-items:start;margin-top:12px}
+.boxGrid .card{margin-bottom:12px}
+@media(max-width:1100px){.boxGrid{grid-template-columns:1fr}}
 
 /* Team builder */
 .builder{display:grid;grid-template-columns:300px minmax(0,1fr);gap:14px;align-items:start}
@@ -174,3 +177,9 @@ body.liveTab .sitCard .segmented button{padding:0 9px}
 body.liveTab .keys .keyList{gap:6px 10px}
 @media(max-width:1300px){body.liveTab aside{grid-template-columns:auto minmax(0,1fr)}body.liveTab .keys{display:none}}
 @media(max-width:1000px){body.liveTab aside{grid-template-columns:1fr}}
+/* Saved banners */
+.savedBanner{--bn:var(--sub-card);--bn-ink:var(--text);background:var(--bn);color:var(--bn-ink);font-weight:800;text-transform:uppercase;letter-spacing:.03em;border-color:transparent}
+span.savedBanner{border-radius:6px;padding:4px 10px;font-size:12.5px;max-width:320px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bnPreviewWrap{display:grid;gap:4px}
+.bnPreview{display:flex;align-items:center;justify-content:center;gap:12px;min-height:52px;padding:6px 24px;border-radius:9px;background:linear-gradient(180deg,var(--bn,#f2a900),var(--bn-dark,#ae7900));color:var(--bn-ink,#111);font:800 26px/1.1 "Barlow Condensed",sans-serif;letter-spacing:.05em;text-transform:uppercase;text-align:center;max-width:720px}
+.bnPreview img{height:32px;max-width:180px;object-fit:contain}
