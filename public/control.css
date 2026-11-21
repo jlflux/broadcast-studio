@@ -163,3 +163,14 @@ body.liveTab .monitor>.between{align-self:start}
 .gameSide .teamCard .scoreLine .readout{font-size:52px}
 .gameSide .teamCard .counter>span{font-size:12.5px}
 .gameSide .teamCard .counter button{width:30px;min-height:30px}
+/* Top strip on Live: program monitor (sized to its content), game situation, keyboard */
+aside .sitCard{display:none}
+body.liveTab aside .sitCard{display:block}
+body.liveTab aside{grid-template-columns:auto minmax(0,1fr) 230px}
+body.liveTab .monitor{grid-template-columns:300px 230px}
+body.liveTab .sitCard .sitPick{margin-bottom:6px}
+body.liveTab .sitCard .sitPick>.label{min-width:0;width:100%;margin-bottom:-2px}
+body.liveTab .sitCard .segmented button{padding:0 9px}
+body.liveTab .keys .keyList{gap:6px 10px}
+@media(max-width:1300px){body.liveTab aside{grid-template-columns:auto minmax(0,1fr)}body.liveTab .keys{display:none}}
+@media(max-width:1000px){body.liveTab aside{grid-template-columns:1fr}}
