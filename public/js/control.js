@@ -711,6 +711,41 @@ byId('bxCompare').onclick = () => {
   change(d => { d.graphic = {type: 'compare', side: -1, title: 'Team Stats', kicker: g.period === 'HALF' ? 'Halftime' : g.period === 'FINAL' ? 'Final' : '', subtitle: '',
     rows: compareRows(statsDoc.doc.sport, boxScore(statsDoc.doc.sport, statsDoc.doc)), id: uid(), until: serverNow() + 12000}; }, 'Team stats are on air');
 };
+// A clean, print-ready page (line score, team stats, box scores, then the
+// play-by-play) in a new window; the browser's print dialog saves it as a PDF.
+byId('bxPdf').onclick = () => {
+  const stats = statsDoc.doc;
+  const win = open('', '_blank');
+  if (!win) { toast('Allow pop-ups for this site to save the PDF.', 'error'); return; }
+  const g = L().games[stats.sport];
+  const s = statsScore(stats.sport, stats.events);
+  const title = `${L().teams[0].name} ${s[0]}, ${L().teams[1].name} ${s[1]}`;
+  const when = new Date(stats.startedAt || Date.now()).toLocaleDateString(undefined, {weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'});
+  win.document.write(`<!DOCTYPE html><html><head><meta charset="utf-8"><title>${esc(title)} · Box score</title>
+<style>
+  body{font:12px/1.35 -apple-system,"Segoe UI",Roboto,Arial,sans-serif;color:#111;margin:28px}
+  h1{font-size:22px;margin:0}.meta{color:#555;margin:2px 0 16px}
+  .card{break-inside:avoid;margin:0 0 14px}.card header h2,.boxTeam h3{font-size:14px;text-transform:uppercase;letter-spacing:.04em;margin:0 0 4px}
+  .label{display:block;font-size:10px;font-weight:700;text-transform:uppercase;color:#666;margin:6px 0 2px}
+  table{border-collapse:collapse;width:100%}th,td{border-bottom:1px solid #ccc;padding:3px 5px;text-align:left}th{font-size:10px;color:#555;text-transform:uppercase}
+  .n{text-align:right;font-variant-numeric:tabular-nums}.muted{color:#777}
+  .plays{break-before:page}.pbpRow{display:grid;grid-template-columns:70px 70px 1fr;gap:8px;padding:3px 0;border-bottom:1px solid #e3e3e3}
+  .pbpRow button,.swatch{display:none}.pts{font-weight:700}.t{color:#555}
+  .tip{background:#fff6d6;border:1px solid #e8c95a;padding:8px 10px;border-radius:6px;margin-bottom:14px}
+  @page{margin:0.5in}
+  @media print{.tip{display:none}body{margin:0}}
+</style></head><body>
+<p class="tip">In the print window, pick <b>Save as PDF</b> as the destination.</p>
+<h1>${esc(title)}</h1><p class="meta">${esc(stats.sport === 'football' ? 'Football' : 'Basketball')} · ${esc(when)} · ${esc(g.period === 'FINAL' ? 'Final' : g.period)}</p>
+<div id="box"></div><section class="plays"><h2 style="font-size:14px;text-transform:uppercase">Play-by-play</h2><div id="plays"></div></section>
+</body></html>`);
+  win.document.close();
+  renderBoxScore(win.document.getElementById('box'), stats, boxTeams, null);
+  const plays = win.document.getElementById('plays');
+  renderPlays(plays, {...stats, events: [...stats.events].reverse()}, boxTeams, () => {}); // oldest first on paper
+  win.focus();
+  setTimeout(() => win.print(), 300);
+};
 byId('bxCsv').onclick = () => download(`box-score-${statsDoc.doc.sport}-${new Date().toISOString().slice(0, 10)}.csv`, boxCsv(statsDoc.doc, boxTeams), 'text/csv');
 byId('bxBackup').onclick = () => download(`stats-${statsDoc.doc.sport}-${new Date().toISOString().slice(0, 10)}.json`, JSON.stringify(statsDoc.doc, null, 1), 'application/json');
 byId('bxRestore').onchange = async event => {
