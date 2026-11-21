@@ -8,7 +8,7 @@ It runs on Vercel with a Neon Postgres database (the same setup as the Homewood 
 
 | Page | What it does |
 |---|---|
-| `/control` | Control panel. **Live** is one game screen: each team's score, timeouts, fouls and roster on its side; clock, stat pad and game situation in the middle; program monitor across the top. Also: **Box score & plays** (line score, team stats, box score with On air buttons, play-by-play with delete, CSV export, backup/restore, new stat game) for the active game, stat graphics, graphics, ticker, teams, team builder, style, and scoreboard serial import |
+| `/control` | Control panel. **Live** is one game screen: each team's score, timeouts, fouls and roster on its side; clock, stat pad and game situation in the middle; program monitor across the top. Also: **Box score & plays** (line score, team stats, box score with On air buttons, play-by-play with delete, Save PDF, CSV export, backup/restore, new stat game) for the active game, stat graphics, graphics, ticker, teams, team builder, style, and scoreboard serial import |
 | `/stats` | Stat keeper: rosters, tap-player-then-action stat entry, box score, play-by-play. Sends the score (and basketball team fouls) to the scorebug. Play entry is also built into the control panel's Live tab; the box score, play-by-play and rosters are in its **Box score & plays** tab. Open `/stats` on its own for a second screen or tablet |
 | `/overlay` | The OBS Browser Source (1920 × 1080, transparent) |
 
