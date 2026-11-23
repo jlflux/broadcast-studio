@@ -1244,6 +1244,8 @@ function renderObsLinks() {
     ['Scorebug + banner', 'Just the bug', overlayUrl(overlayKey, 'bug,banner')],
     ['Graphics only', 'Lower thirds', overlayUrl(overlayKey, 'graphic')],
     ['Ticker only', 'Score ticker', overlayUrl(overlayKey, 'ticker')],
+    ['Gamecast field', 'Virtual gamecast (put it below the scorebug)', new URL('/gamecast?output=1#key=' + overlayKey, location.origin).href],
+    ['Gamecast control', 'Enter plays for the virtual gamecast', new URL('/gamecast', location.origin).href],
     ['Control panel dock', 'OBS → Docks → Custom Browser Docks', new URL('/control', location.origin).href],
     ['Stat keeper', 'For the stats laptop or tablet', new URL('/stats', location.origin).href],
   ];

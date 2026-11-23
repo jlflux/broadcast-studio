@@ -11,6 +11,7 @@ It runs on Vercel with a Neon Postgres database (the same setup as the Homewood 
 | `/control` | Control panel. **Live** is one game screen: each team's score, timeouts, fouls and roster on its side; clock, stat pad and game situation in the middle; program monitor across the top. Also: **Box score & plays** (line score, team stats, box score with On air buttons, play-by-play with delete, Save PDF, CSV export, backup/restore, new stat game) for the active game, stat graphics, graphics, ticker, teams, team builder, style, and scoreboard serial import |
 | `/stats` | Stat keeper: rosters, tap-player-then-action stat entry, box score, play-by-play. Sends the score (and basketball team fouls) to the scorebug. Play entry is also built into the control panel's Live tab; the box score, play-by-play and rosters are in its **Box score & plays** tab. Open `/stats` on its own for a second screen or tablet |
 | `/overlay` | The OBS Browser Source (1920 × 1080, transparent) |
+| `/gamecast` | Virtual gamecast for games without video: enter each play and it draws on a digital field. Its OBS source is `/gamecast?output=1#key=…` |
 
 **Scorebug.** Football and basketball, each with its own saved game, so switching sports keeps both games. Four layouts: a wide **broadcast bar**, a slim **ribbon bar** (name plates, team-color logo tiles and score slabs around an angled clock tile), **team cards + clock tile** (two team cards meeting at a raised clock tile), and a compact **corner box**. Ribbon and badge use a name plate / card color you set in Style. All layouts can be placed in any of six positions with size and nudge controls. It shows timeouts, possession, down & distance or a status (FLAG, TIMEOUT, REVIEW…), the play clock or shot clock, team fouls, and a BONUS tag. Clocks run on the server's time, so every screen agrees. Basketball shows tenths under a minute.
 
@@ -35,6 +36,12 @@ It runs on Vercel with a Neon Postgres database (the same setup as the Homewood 
 **Scoreboard data.** Takes readings from a ScoreSight camera feed, or reads the press-box scoreboard controller (FairPlay, Daktronics, etc.) over RS-232 through Chrome's Web Serial API: no local server or driver install beyond the USB-serial adapter. Map each value to a byte offset once (ASCII, BCD or binary). A live hex view highlights the bytes that change, and mappings can be saved and exported.
 
 **Team library.** Save team names, colors and logos and load them onto either side. Rosters save to the library per sport too.
+
+**Virtual gamecast (football).** For games where video isn't allowed (like the AHSAA playoffs), `/gamecast` stands in for the camera: put it under the scorebug with an audio broadcast. Enter each play (run, pass, sack, punt, kickoff, field goal, PAT, penalty) with the numbers and yards, and it draws on the field. Down, distance, ball spot, possession and score follow NFHS rules (kickoff from the 40, PAT from the 3, touchbacks to the 20, half the distance on penalties), with undo and replay.
+- **Gamecast (2D)**, the default, is an ESPN-style full-field view: each play of the current drive is a row (runs straight, passes and kicks arc, dotted = incomplete or no good, dashed yellow = penalty), with a team pin on the ball, the line to gain, a Current Drive header, Down / Ball on, and a play card with player stat cards built from the play log. Backgrounds: Transparent (for OBS), Light, Dark or Green screen; Grey or Green field.
+- **3D players** animates 22 players on a lit 3D field with a broadcast, All-22, end zone or sky camera; **3D lines** draws the plays as lines on that field.
+- **Teams → Load today's teams from the scorebug** brings in names, colors, logos and the saved football rosters. **Send score, possession and down & distance to the scorebug** is off by default; leave it off if ScoreSight, the serial import or the stat keeper sets the score.
+- In OBS, add **Style → OBS sources → Gamecast field** as a Browser Source below the scorebug source.
 
 ## Launch on Vercel
 
@@ -97,6 +104,6 @@ npm test                                   # API, stat engine, roster parser, se
 LOCAL_PG_URL=postgres://… npm test         # also runs the API test against real Postgres
 ```
 
-Everything is vanilla JS modules with no build step. Bundled third-party files: Barlow Condensed (SIL Open Font License, `public/fonts`) and pdf.js (Apache-2.0, `public/vendor`) for reading roster PDFs. Scanned PDFs have no text to read; paste the roster instead.
+Everything is vanilla JS modules with no build step. Bundled third-party files: Barlow Condensed (SIL Open Font License, `public/fonts`), pdf.js (Apache-2.0, `public/vendor`) for reading roster PDFs, and three.js r128 (MIT, `public/vendor`) for the gamecast's 3D view. Scanned PDFs have no text to read; paste the roster instead.
 
 **Requirements:** OBS 28 or newer. Scoreboard import needs Chrome or Edge on a desktop. The overlay checks for changes about every 0.8 seconds.

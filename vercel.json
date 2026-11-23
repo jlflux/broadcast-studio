@@ -7,6 +7,7 @@
     { "source": "/control", "destination": "/control.html" },
     { "source": "/overlay", "destination": "/overlay.html" },
     { "source": "/stats", "destination": "/stats.html" },
+    { "source": "/gamecast", "destination": "/gamecast.html" },
     { "source": "/login", "destination": "/login.html" }
   ],
   "headers": [

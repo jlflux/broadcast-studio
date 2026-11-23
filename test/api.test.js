@@ -65,4 +65,32 @@ for (const [name, store] of await stores()) {
     const anonymous = await api('doc').fetch(new Request(origin + '/api/doc?key=live'));
     assert.equal(anonymous.status, 401);
   });
+
+  test(`${name}: gamecast doc saves and reaches OBS with the overlay key`, async () => {
+    const api = route => handler(route, env, () => store);
+    const login = await api('session').fetch(new Request(origin + '/api/session', {
+      method: 'POST', headers: {'Content-Type': 'application/json', Origin: origin}, body: JSON.stringify({password}),
+    }));
+    const cookie = login.headers.get('Set-Cookie').split(';')[0];
+    const first = await (await api('doc').fetch(new Request(origin + '/api/doc?key=gamecast', {headers: {cookie}}))).json();
+    assert.equal(first.revision, 0);
+    assert.equal(first.doc.state, null);
+    const post = body => api('doc').fetch(new Request(origin + '/api/doc', {
+      method: 'POST', headers: {'Content-Type': 'application/json', Origin: origin, cookie},
+      body: JSON.stringify({key: 'gamecast', session: first.session, revision: 0, doc: body}),
+    }));
+    assert.equal((await post({schema: 1, state: {ball: 40}, log: 'nope', cue: {seq: 0}})).status, 400);
+    const saved = await post({schema: 1, state: {ball: 40, poss: 'home'}, log: [], lastPlay: null, view: {style: 'espn'}, cue: {seq: 1, kind: 'play'}});
+    assert.equal(saved.status, 200);
+
+    const headers = {Authorization: 'Bearer ' + overlayKey(password)};
+    const denied = await api('overlay').fetch(new Request(origin + '/api/overlay?doc=gamecast'));
+    assert.equal(denied.status, 401);
+    const read = await api('overlay').fetch(new Request(origin + '/api/overlay?doc=gamecast', {headers}));
+    const packet = await read.json();
+    assert.equal(packet.gamecast.state.ball, 40);
+    assert.equal(packet.gamecast.cue.seq, 1);
+    const same = await api('overlay').fetch(new Request(origin + '/api/overlay?doc=gamecast', {headers: {...headers, 'X-Doc-Version': `${packet.session}/${packet.revision}`}}));
+    assert.equal(same.status, 204);
+  });
 }
