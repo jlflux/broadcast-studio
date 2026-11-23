@@ -229,7 +229,8 @@ export class Doc {
 }
 
 export function toLogin() {
-  location.replace(location.pathname.startsWith('/stats') ? '/login?next=stats' : '/login');
+  const path = location.pathname;
+  location.replace(path.startsWith('/stats') ? '/login?next=stats' : path.startsWith('/gamecast') ? '/login?next=gamecast' : '/login');
 }
 
 export async function getSession() {

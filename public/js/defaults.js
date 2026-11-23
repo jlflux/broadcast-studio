@@ -80,4 +80,8 @@ export function defaultStats() {
   return {schema: 1, sport: 'football', teams: [{players: []}, {players: []}], events: [], autoSend: true, startedAt: 0};
 }
 
-export const DEFAULT_DOCS = {live: defaultLive, ticker: defaultTicker, library: defaultLibrary, stats: defaultStats};
+export function defaultGamecast() {
+  return {schema: 1, state: null, log: [], lastPlay: null, view: null, cue: {seq: 0}};
+}
+
+export const DEFAULT_DOCS = {live: defaultLive, ticker: defaultTicker, library: defaultLibrary, stats: defaultStats, gamecast: defaultGamecast};
