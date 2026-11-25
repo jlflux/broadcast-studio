@@ -342,7 +342,7 @@
           <p class="hint">Lets the Transition card switch OBS scenes while a wipe covers the screen. Saved on this computer only. In OBS: <b>Tools → WebSocket Server Settings</b>, check <b>Enable WebSocket server</b>, then <b>Show Connect Info</b> for the port and password.</p>
           <div class="grid4" style="align-items:end">
             <label>OBS address<input id="obsUrl" placeholder="ws://127.0.0.1:4455" autocomplete="off"></label>
-            <label>Password<input id="obsPassword" type="password" autocomplete="off"></label>
+            <label>OBS WebSocket password<input id="obsPassword" type="text" class="masked" autocomplete="off" autocapitalize="off" spellcheck="false" data-lpignore="true" data-1p-ignore data-bwignore></label>
             <div class="row" style="flex-wrap:nowrap"><button type="button" class="primary" id="obsConnect">Connect</button><button type="button" id="obsDisconnect">Disconnect</button></div>
             <label class="check"><input type="checkbox" id="obsAuto"> Connect when this page opens</label>
           </div>
