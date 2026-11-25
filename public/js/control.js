@@ -11,7 +11,7 @@ import {defaultStats} from './defaults.js';
 import {ENCODINGS, FIELDS, SerialReader, decodeRaw, interpret, parseHex} from './serial.js';
 import {roleOf} from './feed.js';
 import {coverAt, fullUp, newTransition} from './transitions.js';
-import {FULL_KINDS, LINEUP_MAX, autoKicker, defaultFullDrafts, keysFull, leadersFull, lineupFull, matchupFull, statsFull} from './fullscreens.js';
+import {CLOCK_LABEL, FULL_KINDS, LINEUP_MAX, autoKicker, defaultFullDrafts, keysFull, leadersFull, lineupFull, matchupFull, statsFull} from './fullscreens.js';
 import {ObsLink} from './obs.js';
 
 // ── Documents ───────────────────────────────────────────────────────────────
@@ -949,7 +949,7 @@ function fsBuild() {
   const draft = fsDraft();
   const ctx = {live: L(), stats: statsDoc.doc};
   switch (fsKind) {
-    case 'matchup': return matchupFull(draft);
+    case 'matchup': return matchupFull(draft, L().sport, serverNow());
     case 'keys': return keysFull(draft);
     case 'lineup': return lineupFull(draft, fsPicked().map(p => ({...p, photo: fsPhoto(p.photo)})), L().sport);
     case 'stats': return statsFull(draft, ctx);
@@ -1001,6 +1001,18 @@ function renderFullTab(force = false) {
     stats: autoKicker(period) || 'Halftime', leaders: autoKicker(period) || 'Halftime'}[fsKind];
   byId('fsTitle').placeholder = {matchup: 'Region 5 · Week 9', lineup: 'Starting Lineup', keys: 'Keys to the Game', stats: 'Team Stats', leaders: 'Game Leaders'}[fsKind];
 
+  if (fsKind === 'matchup') {
+    const m = fsDrafts.matchup;
+    byId('fsClock').value = m.clock || 'off';
+    setField('fsStart', m.startTime);
+    setField('fsClockLabel', m.clockLabel);
+    byId('fsClockLabel').placeholder = CLOCK_LABEL[sport] || 'Starts in';
+    byId('fsStartWrap').hidden = m.clock !== 'start';
+    byId('fsClockLabel').closest('label').hidden = !m.clock || m.clock === 'off';
+    setText('fsClockHint', m.clock === 'start'
+      ? (m.startTime ? 'Counts down live on air until the start time, then reads "Starting soon". Change the time, then take it again.' : 'Pick the start time to show the countdown.')
+      : m.clock === 'game' ? 'Shows the scorebug\'s game clock as it runs: set it to the pregame time and start it, or let the scoreboard feed it.' : '');
+  }
   if (fsKind === 'lineup' || fsKind === 'keys') {
     const entries = fsKind === 'lineup' ? [[0, teams[0].name], [1, teams[1].name]] : [[-1, 'Both teams'], [0, teams[0].name], [1, teams[1].name]];
     options(byId('fsSide'), entries, fsKind === 'lineup' ? fsLineupSide() : draft.side);
@@ -1062,6 +1074,9 @@ for (const [id, field] of [['fsKicker', 'kicker'], ['fsTitle', 'title'], ['fsSub
   byId(id).oninput = () => { fsDraft()[field] = byId(id).value; saveFs(); fsSendPreview(); };
 }
 byId('fsSide').onchange = () => { fsDraft().side = Number(byId('fsSide').value); saveFs(); renderFullTab(true); };
+byId('fsClock').onchange = event => { fsDrafts.matchup.clock = event.target.value; saveFs(); renderFullTab(true); };
+byId('fsStart').oninput = event => { fsDrafts.matchup.startTime = event.target.value; saveFs(); renderFullTab(true); };
+byId('fsClockLabel').oninput = event => { fsDrafts.matchup.clockLabel = event.target.value; saveFs(); fsSendPreview(); };
 byId('fsShowLine').onchange = event => { fsDrafts.stats.showLine = event.target.checked; saveFs(); fsSendPreview(); };
 byId('fsPickClear').onclick = () => { fsDrafts.lineup.picks[fsPickKey()] = []; saveFs(); renderFullTab(true); };
 byId('fsWipe').checked = local.get('fsWipe', true);

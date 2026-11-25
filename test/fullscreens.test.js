@@ -111,3 +111,24 @@ test('wipes run on the server clock and full-screens switch at the cover point',
   assert.equal(fullUp({showAt: 100, hideAt: 0}, 1e12), true);
   assert.equal(fullUp(null, 1), false);
 });
+
+test('matchup clock: countdown to a start time, or the scorebug clock', async () => {
+  const {startAtFor} = await import('../public/js/fullscreens.js');
+  const now = new Date(2026, 10, 24, 18, 30).getTime();
+  assert.equal(startAtFor('19:00', now), new Date(2026, 10, 24, 19, 0).getTime());
+  assert.equal(startAtFor('18:00', now), new Date(2026, 10, 24, 18, 0).getTime()); // just passed: today
+  assert.equal(startAtFor('06:00', now), new Date(2026, 10, 25, 6, 0).getTime()); // long gone: tomorrow
+  assert.equal(startAtFor('', now), 0);
+  const draft = {...defaultFullDrafts().matchup, clock: 'start', startTime: '19:00'};
+  const full = matchupFull(draft, 'football', now);
+  assert.equal(full.clock, 'start');
+  assert.equal(full.clockLabel, 'Kickoff in');
+  assert.equal(full.startAt, new Date(2026, 10, 24, 19, 0).getTime());
+  assert.equal(matchupFull({...draft, startTime: ''}, 'football', now).clock, undefined);
+  const game = matchupFull({...draft, clock: 'game', clockLabel: 'Tip-off'}, 'basketball', now);
+  assert.deepEqual([game.clock, game.clockLabel, game.startAt], ['game', 'Tip-off', undefined]);
+  const live = defaultLive();
+  assert.ok(validLive({...live, full: stamp(full)}));
+  assert.ok(validLive({...live, full: stamp(game)}));
+  assert.equal(validLive({...live, full: {...stamp(full), clock: 'moon'}}), false);
+});

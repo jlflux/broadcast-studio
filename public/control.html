@@ -225,6 +225,12 @@
             <p class="hint" style="margin:8px 0 0" id="fsStatsHint"></p>
           </div>
           <p class="hint" data-for="leaders" style="margin:12px 0 0" id="fsLeadersHint"></p>
+          <div data-for="matchup" class="grid3" style="margin-top:10px">
+            <label>Clock<select id="fsClock"><option value="off">No clock</option><option value="start">Count down to the start time</option><option value="game">Show the scorebug's game clock</option></select></label>
+            <label id="fsStartWrap">Start time<input type="time" id="fsStart"></label>
+            <label>Clock label<input id="fsClockLabel" maxlength="30"></label>
+          </div>
+          <p class="hint" data-for="matchup" style="margin:8px 0 0" id="fsClockHint"></p>
           <p class="hint" data-for="matchup" style="margin:12px 0 0">Team names, logos, rankings and records come from the scorebug. Put the event in the headline (Region 5 · Week 9) and the venue in the bottom line.</p>
         </section>
       </section>

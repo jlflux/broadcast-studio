@@ -11,7 +11,7 @@ const cut = (text, max) => String(text ?? '').trim().slice(0, max);
 
 export function defaultFullDrafts() {
   return {
-    matchup: {kicker: 'Tonight', title: '', subtitle: ''},
+    matchup: {kicker: 'Tonight', title: '', subtitle: '', clock: 'off', startTime: '', clockLabel: ''},
     lineup: {side: 0, kicker: '', title: 'Starting Lineup', subtitle: '', picks: {}},
     keys: {side: -1, kicker: '', title: 'Keys to the Game', subtitle: '', points: ['', '', '', '']},
     stats: {kicker: '', title: 'Team Stats', subtitle: '', showLine: true},
@@ -26,8 +26,33 @@ function base(kind, draft, extra = {}) {
   return {kind, side: [0, 1].includes(draft.side) ? draft.side : -1, kicker: cut(draft.kicker, 60), title: cut(draft.title, 90), subtitle: cut(draft.subtitle, 140), ...extra};
 }
 
-export function matchupFull(draft) {
-  return base('matchup', {...draft, side: -1});
+export const CLOCK_LABEL = {basketball: 'Tip-off in', football: 'Kickoff in'};
+
+// "19:00" today in this browser's time zone. A time more than an hour gone is
+// taken to mean tomorrow (setting up after midnight for an early game).
+export function startAtFor(time, now = Date.now()) {
+  const match = String(time || '').match(/^(\d{1,2}):(\d{2})$/);
+  if (!match) return 0;
+  const at = new Date(now);
+  at.setHours(Number(match[1]), Number(match[2]), 0, 0);
+  if (at.getTime() < now - 3600000) at.setDate(at.getDate() + 1);
+  return at.getTime();
+}
+
+// The matchup can carry a clock: a countdown to the start time, or the
+// scorebug's game clock (for a pregame countdown run on the scoreboard).
+// Either one runs live on air; nothing about it is locked at Take.
+export function matchupFull(draft, sport = 'basketball', now = Date.now()) {
+  const extra = {};
+  if (draft.clock === 'start' || draft.clock === 'game') {
+    const startAt = draft.clock === 'start' ? startAtFor(draft.startTime, now) : 0;
+    if (draft.clock === 'game' || startAt) {
+      extra.clock = draft.clock;
+      if (startAt) extra.startAt = startAt;
+      extra.clockLabel = cut(draft.clockLabel, 30) || CLOCK_LABEL[sport] || 'Starts in';
+    }
+  }
+  return base('matchup', {...draft, side: -1}, extra);
 }
 
 export function keysFull(draft) {
