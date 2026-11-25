@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Broadcast Studio · Basketball scoresheet</title>
+<link rel="stylesheet" href="/studio.css">
+<link rel="stylesheet" href="/scoresheet.css">
+<style id="pageSize">@page{size:8.5in 11in;margin:0}</style>
+<script type="module" src="/js/scoresheet.js"></script>
+</head>
+<body>
+<header class="top noprint">
+  <div class="brand"><div class="mark" aria-hidden="true"><i></i><i></i><i></i></div><div><h1>Basketball scoresheet</h1><small id="modeLabel">BROADCAST STUDIO</small></div></div>
+  <div class="row">
+    <span id="connection" class="connection" role="status">Connecting</span>
+    <a href="/control" id="backLink">Control panel</a>
+    <button type="button" id="ssLink" title="A read-only link for your broadcasters. It updates during the game and shows the finished sheet afterward.">Copy broadcaster link</button>
+    <button type="button" class="primary big" id="ssPrint">Print / Save PDF</button>
+  </div>
+</header>
+<div id="startupError" class="login card noprint" hidden></div>
+<main id="app" class="ssMain noprint" hidden>
+  <section class="card">
+    <div class="ssControls">
+      <label>Date<input id="ssDate" maxlength="30"></label>
+      <label>Paper<select id="ssPaper"><option value="letter">Letter (8.5 × 11)</option><option value="legal">Legal (8.5 × 14)</option><option value="tabloid">Tabloid (11 × 17)</option></select></label>
+      <label>Season stats rows<select id="ssSeasonRows"><option value="0">None</option><option value="3">Top 3 per team</option><option value="5">Top 5 per team</option><option value="8">Top 8 per team</option><option value="99">Everyone with stats</option></select></label>
+      <label class="check operatorOnly" style="align-self:end"><input type="checkbox" id="ssFill"> Fill in from the stat keeper</label>
+    </div>
+    <p class="hint" style="margin:10px 0 0" id="ssInfo"></p>
+  </section>
+</main>
+<div id="sheets"></div>
+<section class="card ssEditor noprint operatorOnly" id="editor" hidden>
+  <header><h2>Season stats</h2><div class="row"><span class="muted" id="edSaved"></span><div class="segmented" id="edSide" role="group" aria-label="Team"><button type="button" data-side="0" id="edSide0">Left</button><button type="button" data-side="1" id="edSide1">Right</button></div></div></header>
+  <p class="hint" style="margin-top:0">These fill the table at the top of the sheet and save to the team's basketball roster. Paste a stats table (MaxPreps, a spreadsheet or CSV, with the header row). You can paste the scoring, rebounding and other tabs one after another; each fills in its columns. Or type them in below.</p>
+  <textarea id="edPaste" rows="4" placeholder="#	Athlete Name	GP	PPG	FG%	3PM	3P%	FTM	FT%	…"></textarea>
+  <div class="row" style="margin:8px 0 14px"><button type="button" class="primary" id="edApply">Apply pasted stats</button><button type="button" class="ghost" id="edClear">Clear this team's season stats</button><span class="muted" id="edResult"></span></div>
+  <div class="scroll"><table class="edTable" id="edTable"><thead></thead><tbody></tbody></table></div>
+</section>
+</body>
+</html>

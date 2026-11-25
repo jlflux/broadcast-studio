@@ -267,10 +267,15 @@ export function parseRoster(text) {
     const find = (...names) => cols.findIndex(c => names.some(n => c === n || c.includes(n)));
     const num = find('#', 'no', 'num', 'jersey'), name = find('name', 'player'), first = find('first'), last = find('last');
     const pos = find('pos'), cls = find('yr', 'year', 'class', 'grade', 'cl');
+    const ht = find('ht', 'height'), wt = find('wt', 'weight');
     for (const row of lines.slice(1).map(split)) {
       const full = name >= 0 && first < 0 ? row[name] : [row[first], row[last]].filter(Boolean).join(' ');
       if (!full) continue;
-      players.push({num: (row[num] || '').replace(/\D/g, ''), name: full, pos: pos >= 0 ? row[pos] || '' : '', cls: cls >= 0 ? row[cls] || '' : ''});
+      const player = {num: (row[num] || '').replace(/\D/g, ''), name: full, pos: pos >= 0 ? row[pos] || '' : '', cls: cls >= 0 ? row[cls] || '' : ''};
+      // Height and weight are kept for spotting boards when the roster has them.
+      if (ht >= 0 && row[ht]) player.ht = row[ht].slice(0, 8);
+      if (wt >= 0 && row[wt]) player.wt = row[wt].replace(/\s*lbs?\.?$/i, '').slice(0, 5);
+      players.push(player);
     }
     return players;
   }
@@ -286,8 +291,10 @@ export function parseRoster(text) {
       num = tokens[numAt].replace('#', '');
       tokens.splice(numAt, 1);
     }
-    let pos = '', cls = '';
+    let pos = '', cls = '', ht = '', wt = '';
     tokens = tokens.filter(t => {
+      if (/^\d-\d{1,2}$|^\d'\d{1,2}"?$/.test(t)) { ht = ht || t; return false; } // height
+      if (/^\d{3}$/.test(t)) { wt = wt || t; return false; }                     // weight
       if (!pos && POS.test(t) && t.length <= 5 && t === t.toUpperCase()) { pos = t.toUpperCase(); return false; }
       if (!cls && CLS.test(t) && (/^\d+(th)?$/.test(t) ? tokens.length > 2 : true)) { cls = t.replace('.', ''); return false; }
       if (/^\d-\d{1,2}$|^\d{3}$|lbs?\.?$/i.test(t)) return false; // height / weight
@@ -295,7 +302,10 @@ export function parseRoster(text) {
     });
     const name = tokens.join(' ').replace(/\s+/g, ' ').trim();
     if (!name || /^(no|name|pos|player|roster)$/i.test(name)) continue;
-    players.push({num, name, pos, cls});
+    const player = {num, name, pos, cls};
+    if (ht) player.ht = ht;
+    if (wt) player.wt = wt;
+    players.push(player);
   }
   return players;
 }

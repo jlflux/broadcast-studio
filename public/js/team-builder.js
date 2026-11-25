@@ -199,8 +199,9 @@ export function initTeamBuilder({libraryDoc, liveDoc, statsDoc, change, cleanTea
     if (!list.length) { toast('No players found in that text.', 'error'); return; }
     for (const p of list) {
       const existing = p.num && players().find(x => x.num === p.num);
-      if (existing) Object.assign(existing, {name: p.name, pos: p.pos || existing.pos, cls: p.cls || existing.cls});
-      else players().push({id: uid(), num: p.num || '', name: p.name.slice(0, 40), pos: (p.pos || '').slice(0, 6), cls: (p.cls || '').slice(0, 10), photo: ''});
+      const size = {...(p.ht ? {ht: p.ht} : {}), ...(p.wt ? {wt: p.wt} : {})}; // kept for spotting boards
+      if (existing) Object.assign(existing, {name: p.name, pos: p.pos || existing.pos, cls: p.cls || existing.cls, ...size});
+      else players().push({id: uid(), num: p.num || '', name: p.name.slice(0, 40), pos: (p.pos || '').slice(0, 6), cls: (p.cls || '').slice(0, 10), photo: '', ...size});
     }
     setDirty();
     renderRoster();

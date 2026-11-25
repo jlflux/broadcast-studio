@@ -183,3 +183,13 @@ span.savedBanner{border-radius:6px;padding:4px 10px;font-size:12.5px;max-width:3
 .bnPreviewWrap{display:grid;gap:4px}
 .bnPreview{display:flex;align-items:center;justify-content:center;gap:12px;min-height:52px;padding:6px 24px;border-radius:9px;background:linear-gradient(180deg,var(--bn,#f2a900),var(--bn-dark,#ae7900));color:var(--bn-ink,#111);font:800 26px/1.1 "Barlow Condensed",sans-serif;letter-spacing:.05em;text-transform:uppercase;text-align:center;max-width:720px}
 .bnPreview img{height:32px;max-width:180px;object-fit:contain}
+
+/* Full-screens tab */
+.fsPicks{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.fsPicks button{display:inline-flex;align-items:center;gap:6px;min-height:36px;position:relative}
+.fsPicks button b{font-variant-numeric:tabular-nums;min-width:22px;text-align:right}
+.fsPicks button small{color:var(--sub);font-weight:600}
+.fsPicks button i{font-style:normal;background:var(--amber);color:var(--amber-ink);border-radius:50%;width:20px;height:20px;display:grid;place-items:center;font-size:11px;font-weight:800}
+#tab-full .monitorFrame{background:#05080d}
+.brandPreview{height:34px;max-width:140px;object-fit:contain;background:#0a111b;border:1px solid var(--line);border-radius:6px;padding:3px}
+#obsScenes button{min-width:90px}

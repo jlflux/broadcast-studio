@@ -1,18 +1,22 @@
-// OBS overlay: scorebug, banner, graphics and ticker on a 1920×1080 canvas.
-// URL: /overlay?layers=bug,banner,graphic,ticker#key=<overlay key>
+// OBS overlay: scorebug, banner, graphics, ticker, full-screens and wipes on a
+// 1920×1080 canvas.
+// URL: /overlay?layers=bug,banner,graphic,ticker,full,wipe#key=<overlay key>
 // Leave out `layers` to show everything; list some to split them into
 // separate OBS sources.
 import {byId, clamp, clockText, mix, photoPosition, readable, remaining, running, setTeamColors, setText, shade, validImage, esc} from './common.js';
 import {createTicker} from './ticker-layer.js';
+import {fitText, renderFull, renderWipe} from './full-layer.js';
+import {coverAt, fullUp, wipeMs, wipeOver} from './transitions.js';
 
 const params = new URLSearchParams(location.search);
-const layers = new Set((params.get('layers') || 'bug,banner,graphic,ticker').split(',').map(s => s.trim()));
+const layers = new Set((params.get('layers') || 'bug,banner,graphic,ticker,full,wipe').split(',').map(s => s.trim()));
 const key = new URLSearchParams(location.hash.slice(1)).get('key');
 const canvas = byId('canvas');
 // Preview mode (used inside the control panel): shows a graphic the control
 // panel sends with postMessage instead of the one on air.
 const previewMode = params.get('preview') === '1';
 let previewGraphic = null;
+let previewFull = null;
 
 let live = null;
 let tickerDoc = null;
@@ -53,7 +57,7 @@ async function poll() {
 }
 
 function hideAll() {
-  ['bug', 'banner', 'stackGraphic', 'lowerGraphic', 'ticker'].forEach(id => { byId(id).hidden = true; });
+  ['bug', 'banner', 'stackGraphic', 'lowerGraphic', 'ticker', 'full', 'wipe'].forEach(id => { byId(id).hidden = true; });
 }
 
 // ── Scorebug ────────────────────────────────────────────────────────────────
@@ -110,13 +114,14 @@ function paintBug() {
     bug.innerHTML = bugMarkup(style.layout, sport);
     lastScores = null;
   }
-  const show = live.bugVisible && layers.has('bug');
+  // A full-screen covers the scorebug, banner and lower thirds; they come back after.
+  const show = live.bugVisible && layers.has('bug') && !covered();
   if (show) {
     bug.classList.remove('leaving');
     bug.hidden = false;
   } else if (!bug.hidden && !bug.classList.contains('leaving')) {
     bug.classList.add('leaving');
-    setTimeout(() => { if (!live.bugVisible || !layers.has('bug')) bug.hidden = true; }, 340);
+    setTimeout(() => { if (!live.bugVisible || !layers.has('bug') || covered()) bug.hidden = true; }, 340);
   }
   canvas.style.setProperty('--dark', style.dark);
   canvas.style.setProperty('--dark-hi', mix(style.dark, '#ffffff', 0.12));
@@ -219,8 +224,12 @@ function paintBug() {
   stack.style.transform = `${centered ? 'translateX(-50%) ' : ''}translate(${style.nudgeX}px, ${-style.nudgeY}px) scale(${clamp(style.scale, 40, 200) / 100})`;
 }
 
+let wasCovered = false;
 function tick() {
   if (!live || bugShape === '') return;
+  // Full-screens go up and down on a schedule (under a wipe), so check often.
+  const up = live.full ? fullUp(live.full, now()) : false;
+  if (up !== wasCovered) { wasCovered = up; paint(); return; }
   const game = live.games[live.sport];
   const t = now();
   const ms = remaining(game.game, t);
@@ -239,7 +248,7 @@ function tick() {
 function paintBanner() {
   const element = byId('banner');
   const banner = live.banner;
-  const show = layers.has('banner') && banner && (!banner.until || now() < banner.until);
+  const show = layers.has('banner') && banner && (!banner.until || now() < banner.until) && !covered();
   if (!show) { element.hidden = true; element.dataset.id = ''; return; }
   // Saved banners can carry their own colors and a sponsor logo.
   const color = banner.color || (banner.side >= 0 ? live.teams[banner.side].color : live.style.accent);
@@ -343,7 +352,7 @@ function paintGraphic() {
   const other = placement === 'stack' ? byId('lowerGraphic') : byId('stackGraphic');
   other.hidden = true;
   other.dataset.key = '';
-  const show = layers.has('graphic') && graphic && (!graphic.until || now() < graphic.until);
+  const show = layers.has('graphic') && graphic && (!graphic.until || now() < graphic.until) && (previewMode || !covered());
   const keyNow = JSON.stringify([graphic, placement, teams.map(t => [t.short, t.color])]);
   if (!show) { target.hidden = true; target.dataset.key = ''; graphicKey = ''; return; }
   if (target.dataset.key === keyNow) return;
@@ -359,6 +368,42 @@ function paintGraphic() {
   target.hidden = true; void target.offsetWidth;
   target.replaceChildren(...graphicContent(graphic, teams));
   target.hidden = false;
+}
+
+// ── Full-screens ────────────────────────────────────────────────────────────
+const covered = () => Boolean(live) && !previewMode && fullUp(live.full, now());
+let fullKey = '';
+function paintFull() {
+  const element = byId('full');
+  const full = previewMode ? previewFull : live.full;
+  const show = layers.has('full') && full && (previewMode || fullUp(full, now()));
+  if (!show) { element.hidden = true; fullKey = ''; return; }
+  const keyNow = JSON.stringify([full, live.teams.map(t => [t.name, t.short, t.rank, t.record, t.color, t.accent, t.logo.length, t.logoBacking]),
+    live.style.dark, live.style.accent, live.style.brandLogo?.length]);
+  if (keyNow === fullKey && !element.hidden) return;
+  fullKey = keyNow;
+  // Under a wipe it appears at once (the wipe hides the change); otherwise it fades in.
+  const t = live.transition;
+  element.classList.toggle('cut', Boolean(t && Math.abs(coverAt(t) - full.showAt) < 50));
+  renderFull(element, full, live);
+  element.hidden = false;
+  fitText(element);
+}
+
+// ── Wipes ───────────────────────────────────────────────────────────────────
+let wipeId = '';
+let wipeTimer = 0;
+function paintWipe() {
+  const t = live.transition;
+  if (!layers.has('wipe') || previewMode || !t || t.id === wipeId) return;
+  wipeId = t.id;
+  const n = now();
+  if (wipeOver(t, n)) return; // too late to show (or the page just opened)
+  const element = byId('wipe');
+  renderWipe(element, t, live, n);
+  element.hidden = false;
+  clearTimeout(wipeTimer);
+  wipeTimer = setTimeout(() => { element.hidden = true; element.replaceChildren(); }, t.at + wipeMs(t.speed) + 150 - n);
 }
 
 // ── Ticker: feed the live game in when asked ────────────────────────────────
@@ -377,12 +422,15 @@ function liveForTicker() {
 
 function paint() {
   try {
+    paintWipe();
     paintBug();
     paintBanner();
     paintGraphic();
+    paintFull();
     if (ticker && tickerDoc) {
       ticker.setLive(liveForTicker());
-      ticker.configure(tickerDoc);
+      // A corner ticker would sit on the full-screen's headline; a bottom bar stays.
+      ticker.configure(covered() && tickerDoc.layout === 'corner' ? {...tickerDoc, visible: false} : tickerDoc);
     }
     tick();
   } catch (error) {
@@ -396,6 +444,12 @@ if (previewMode) {
     const graphic = event.data.studioPreview;
     previewGraphic = graphic && typeof graphic === 'object' ? {...graphic, until: 0} : null;
     if (live) paintGraphic();
+  });
+  addEventListener('message', event => {
+    if (event.origin !== location.origin || !event.data || !('studioPreviewFull' in event.data)) return;
+    const full = event.data.studioPreviewFull;
+    previewFull = full && typeof full === 'object' ? {...full, id: 'preview', showAt: 0, hideAt: 0} : null;
+    if (live) paintFull();
   });
 }
 

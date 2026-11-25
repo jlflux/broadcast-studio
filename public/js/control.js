@@ -10,12 +10,15 @@ import {boxCsv, renderBoxScore, renderPlays} from './box-view.js';
 import {defaultStats} from './defaults.js';
 import {ENCODINGS, FIELDS, SerialReader, decodeRaw, interpret, parseHex} from './serial.js';
 import {roleOf} from './feed.js';
+import {coverAt, fullUp, newTransition} from './transitions.js';
+import {FULL_KINDS, LINEUP_MAX, autoKicker, defaultFullDrafts, keysFull, leadersFull, lineupFull, matchupFull, statsFull} from './fullscreens.js';
+import {ObsLink} from './obs.js';
 
 // ── Documents ───────────────────────────────────────────────────────────────
 const liveDoc = new Doc('live', {onChange: () => render(), interval: 800});
 const tickerDoc = new Doc('ticker', {onChange: () => renderTicker(), interval: 5000});
 const libraryDoc = new Doc('library', {onChange: () => renderLibrary(), interval: 6000});
-const statsDoc = new Doc('stats', {onChange: () => { renderStatsLinks(); renderStatGraphics(); renderGame(); renderBoxTab(); if (liveDoc.ready) renderTeamEditors(); }, interval: 1500});
+const statsDoc = new Doc('stats', {onChange: () => { renderStatsLinks(); renderStatGraphics(); renderFullTab(); renderGame(); renderBoxTab(); if (liveDoc.ready) renderTeamEditors(); }, interval: 1500});
 const L = () => liveDoc.doc;
 const G = () => L().games[L().sport];
 let overlayKey = '';
@@ -67,7 +70,7 @@ function buttons(group, entries, value, pick) {
 const sideOptions = () => [[-1, 'Studio accent'], [0, L().teams[0].name], [1, L().teams[1].name]];
 
 // ── Tabs ────────────────────────────────────────────────────────────────────
-const TABS = ['live', 'stats', 'statgfx', 'graphics', 'ticker', 'teams', 'builder', 'style', 'scoreboard'];
+const TABS = ['live', 'stats', 'statgfx', 'graphics', 'full', 'ticker', 'teams', 'builder', 'style', 'scoreboard'];
 const WIDE_TABS = ['stats', 'builder'];
 let builder = null; // Team builder, set up at startup // these use the full width (no program monitor column)
 function setTab(tab) {
@@ -80,6 +83,7 @@ function setTab(tab) {
   if (tab === 'stats') renderBoxTab();
   if (tab === 'builder') builder?.show();
   if (tab === 'statgfx') renderStatGraphics(true);
+  if (tab === 'full') renderFullTab(true);
 }
 $$('nav.tabs [data-tab]').forEach(b => { b.onclick = () => setTab(b.dataset.tab); });
 
@@ -372,7 +376,12 @@ function tick() {
   byId('monitorClearGraphic').disabled = !graphicUp;
   byId('gClear').disabled = !graphicUp;
   byId('sgClear').disabled = !graphicUp;
-  const onAir = L().bugVisible || bannerUp || graphicUp || tickerDoc.doc?.visible;
+  const full = L().full;
+  const fullOn = fullUp(full, now);
+  setText('fullLive', fullOn ? fsLabel(full.kind) : full && full.showAt > now ? `${fsLabel(full.kind)} (cueing)` : 'None');
+  byId('monitorClearFull').disabled = !full || (!fullOn && !(full.showAt > now));
+  fsRenderState(now);
+  const onAir = L().bugVisible || bannerUp || graphicUp || fullOn || tickerDoc.doc?.visible;
   const status = byId('outputStatus');
   setText(status, onAir ? 'ON AIR' : 'STANDBY');
   status.classList.toggle('live', Boolean(onAir));
@@ -902,6 +911,291 @@ byId('sgEdit').onclick = () => {
 };
 byId('sgPreview').addEventListener('load', () => setTimeout(sgSendPreview, 300));
 
+// ── Full-screens ────────────────────────────────────────────────────────────
+// Pick a full-screen, see it in the preview, then Take. With "Wipe in and
+// out" on, the full-screen goes up (and comes down) while a wipe covers the
+// screen. The numbers are locked in at Take, like stat graphics.
+const fsDrafts = defaultFullDrafts();
+for (const [kind, saved] of Object.entries(local.get('fsDrafts', {}) || {})) if (fsDrafts[kind]) Object.assign(fsDrafts[kind], saved);
+let fsKind = fsDrafts[local.get('fsKind', 'matchup')] ? local.get('fsKind', 'matchup') : 'matchup';
+const fsPhotos = new Map();
+const fsLabel = kind => FULL_KINDS.find(([k]) => k === kind)?.[1] || 'Full-screen';
+const saveFs = () => { local.set('fsDrafts', fsDrafts); local.set('fsKind', fsKind); };
+const fsDraft = () => fsDrafts[fsKind];
+const pid = p => p.id || `${p.num}|${p.name}`;
+
+function fsPhoto(ref) {
+  if (!ref) return '';
+  if (validImage(ref)) return ref;
+  if (fsPhotos.has(ref)) return fsPhotos.get(ref);
+  fsPhotos.set(ref, '');
+  photoData(ref).then(data => { if (data) { fsPhotos.set(ref, data); fsSendPreview(); } });
+  return '';
+}
+// This game's roster from the stat keeper, or the team's saved roster.
+function fsRoster(side) {
+  const sport = L().sport;
+  const stats = statsDoc.doc;
+  if (stats && stats.sport === sport && stats.teams[side]?.players.length) return stats.teams[side].players;
+  return savedRoster(L().teams[side].name, sport)?.players || [];
+}
+const fsLineupSide = () => (fsDrafts.lineup.side === 1 ? 1 : 0);
+const fsPickKey = () => `${L().sport}:${fsLineupSide()}`;
+function fsPicked() {
+  const roster = fsRoster(fsLineupSide());
+  return (fsDrafts.lineup.picks[fsPickKey()] || []).map(id => roster.find(p => pid(p) === id)).filter(Boolean);
+}
+function fsBuild() {
+  const draft = fsDraft();
+  const ctx = {live: L(), stats: statsDoc.doc};
+  switch (fsKind) {
+    case 'matchup': return matchupFull(draft);
+    case 'keys': return keysFull(draft);
+    case 'lineup': return lineupFull(draft, fsPicked().map(p => ({...p, photo: fsPhoto(p.photo)})), L().sport);
+    case 'stats': return statsFull(draft, ctx);
+    default: return leadersFull(draft, ctx);
+  }
+}
+let fsFrame = 0;
+function fsSendPreview() {
+  cancelAnimationFrame(fsFrame);
+  fsFrame = requestAnimationFrame(() => {
+    if (!liveDoc.ready || !statsDoc.ready) return;
+    byId('fsPreview').contentWindow?.postMessage({studioPreviewFull: fsBuild()}, location.origin);
+  });
+}
+
+byId('fsKind').innerHTML = FULL_KINDS.map(([kind, label]) => `<button type="button" data-kind="${kind}">${esc(label)}</button>`).join('');
+byId('fsKind').onclick = event => {
+  const kind = event.target.closest('[data-kind]')?.dataset.kind;
+  if (!kind || kind === fsKind) return;
+  fsKind = kind;
+  saveFs();
+  renderFullTab(true);
+};
+const setField = (id, value) => { const input = byId(id); if (document.activeElement !== input) input.value = value ?? ''; };
+
+function fsRenderState(now) {
+  const full = L().full;
+  const up = fullUp(full, now);
+  const state = byId('fsState');
+  setText(state, up ? `ON AIR · ${fsLabel(full.kind).toUpperCase()}` : 'OFF AIR');
+  state.classList.toggle('live', up);
+  byId('fsClear').disabled = !up;
+}
+
+function renderFullTab(force = false) {
+  if (!liveDoc.ready || !statsDoc.ready) return;
+  fsRenderState(serverNow());
+  if (byId('tab-full').hidden && !force) return;
+  const draft = fsDraft();
+  const sport = L().sport;
+  const teams = L().teams;
+  const period = L().games[sport].period;
+  $$('#fsKind [data-kind]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.kind === fsKind)));
+  $$('#tab-full [data-for]').forEach(el => { el.hidden = !el.dataset.for.split(' ').includes(fsKind); });
+  setField('fsKicker', draft.kicker);
+  setField('fsTitle', draft.title);
+  setField('fsSub', draft.subtitle);
+  byId('fsKicker').placeholder = {matchup: 'Tonight', lineup: teams[fsLineupSide()].name, keys: draft.side >= 0 ? teams[draft.side].name : 'Optional',
+    stats: autoKicker(period) || 'Halftime', leaders: autoKicker(period) || 'Halftime'}[fsKind];
+  byId('fsTitle').placeholder = {matchup: 'Region 5 · Week 9', lineup: 'Starting Lineup', keys: 'Keys to the Game', stats: 'Team Stats', leaders: 'Game Leaders'}[fsKind];
+
+  if (fsKind === 'lineup' || fsKind === 'keys') {
+    const entries = fsKind === 'lineup' ? [[0, teams[0].name], [1, teams[1].name]] : [[-1, 'Both teams'], [0, teams[0].name], [1, teams[1].name]];
+    options(byId('fsSide'), entries, fsKind === 'lineup' ? fsLineupSide() : draft.side);
+  }
+  if (fsKind === 'lineup') {
+    const side = fsLineupSide();
+    const roster = fsRoster(side);
+    const max = LINEUP_MAX[sport];
+    const picks = fsDrafts.lineup.picks[fsPickKey()] || [];
+    setText('fsLineupHint', sport === 'basketball'
+      ? 'Up to 5 players, shown as photo cards (player photos come from the roster).'
+      : 'Up to 12 players, shown as a list. Pick in the order you want them shown.');
+    setText('fsPickLabel', `${teams[side].name} ${sport} roster`);
+    setText('fsPickCount', `${picks.length} of ${max} picked`);
+    byId('fsPicks').innerHTML = roster.length
+      ? roster.map(p => {
+        const order = picks.indexOf(pid(p));
+        return `<button type="button" data-pid="${esc(pid(p))}" aria-pressed="${order >= 0}">${order >= 0 ? `<i>${order + 1}</i>` : ''}<b>${esc(p.num)}</b><span>${esc(p.name)}</span><small>${esc(p.pos || '')}</small></button>`;
+      }).join('')
+      : `<p class="muted">No ${sport} roster for ${esc(teams[side].name)}. Load the teams on the Teams tab or add a roster in the Team builder.</p>`;
+    $$('#fsPicks [data-pid]').forEach(b => {
+      b.onclick = () => {
+        const key = fsPickKey();
+        const list = (fsDrafts.lineup.picks[key] || []).filter(id => roster.some(p => pid(p) === id));
+        const at = list.indexOf(b.dataset.pid);
+        if (at >= 0) list.splice(at, 1);
+        else if (list.length >= max) { toast(`A lineup holds ${max} players. Unpick one first.`, 'error'); return; }
+        else list.push(b.dataset.pid);
+        fsDrafts.lineup.picks[key] = list;
+        saveFs();
+        renderFullTab(true);
+      };
+    });
+  }
+  if (fsKind === 'keys') {
+    const box = byId('fsPoints');
+    if (!box.children.length) {
+      box.innerHTML = Array.from({length: 5}, (_, i) => `<label>Key ${i + 1}<input data-point="${i}" maxlength="140" placeholder="${i === 0 ? 'Win the turnover battle' : ''}"></label>`).join('');
+      $$('[data-point]', box).forEach(input => {
+        input.oninput = () => { fsDrafts.keys.points[Number(input.dataset.point)] = input.value; saveFs(); fsSendPreview(); };
+      });
+    }
+    $$('[data-point]', box).forEach(input => { if (document.activeElement !== input) input.value = fsDrafts.keys.points[Number(input.dataset.point)] || ''; });
+  }
+  const stats = statsDoc.doc;
+  const sameSport = stats.sport === sport;
+  const plays = sameSport ? stats.events.length : 0;
+  const score = L().games[sport].score;
+  byId('fsShowLine').checked = fsDrafts.stats.showLine !== false;
+  setText('fsStatsHint', !sameSport ? `The stat keeper is on ${stats.sport}, so this shows the ${sport} score only.`
+    : plays ? `Score from the scorebug (${score[0]}–${score[1]}), team stats from the stat keeper (${plays} plays).`
+      : 'No plays logged yet, so this shows the score only.');
+  setText('fsLeadersHint', !sameSport ? `The stat keeper is on ${stats.sport}. Switch it to ${sport} for leaders.`
+    : plays ? `The top player in each category for each team, from the stat keeper (${plays} plays).` : 'Leaders show up once plays are logged in the stat keeper.');
+  fsSendPreview();
+}
+
+for (const [id, field] of [['fsKicker', 'kicker'], ['fsTitle', 'title'], ['fsSub', 'subtitle']]) {
+  byId(id).oninput = () => { fsDraft()[field] = byId(id).value; saveFs(); fsSendPreview(); };
+}
+byId('fsSide').onchange = () => { fsDraft().side = Number(byId('fsSide').value); saveFs(); renderFullTab(true); };
+byId('fsShowLine').onchange = event => { fsDrafts.stats.showLine = event.target.checked; saveFs(); fsSendPreview(); };
+byId('fsPickClear').onclick = () => { fsDrafts.lineup.picks[fsPickKey()] = []; saveFs(); renderFullTab(true); };
+byId('fsWipe').checked = local.get('fsWipe', true);
+byId('fsWipe').onchange = event => local.set('fsWipe', event.target.checked);
+byId('fsPreview').addEventListener('load', () => setTimeout(fsSendPreview, 300));
+
+async function fsTake() {
+  await statsDoc.poll(); // newest numbers before locking them in
+  if (fsKind === 'lineup') {
+    for (const p of fsPicked()) {
+      if (p.photo && !validImage(p.photo) && !fsPhotos.get(p.photo)) {
+        const data = await photoData(p.photo);
+        if (data) fsPhotos.set(p.photo, data);
+      }
+    }
+  }
+  const full = fsBuild();
+  if (fsKind === 'lineup' && !full.players.length) { toast('Pick the players for the lineup first.', 'error'); return; }
+  if (fsKind === 'keys' && !full.points.length) { toast('Type at least one key first.', 'error'); return; }
+  const wipe = byId('fsWipe').checked;
+  const id = uid();
+  await change(d => {
+    const t = wipe ? newTransition(d.style, serverNow(), full.side, uid()) : null;
+    d.full = {...full, id, showAt: t ? coverAt(t) : serverNow(), hideAt: 0};
+    if (t) d.transition = t;
+  }, `${fsLabel(fsKind)} is live`);
+}
+function fsClear() {
+  const wipe = byId('fsWipe').checked;
+  return change(d => {
+    if (!d.full) return false;
+    if (!wipe || !fullUp(d.full, serverNow())) { d.full = null; return; }
+    const t = newTransition(d.style, serverNow(), d.full.side ?? -1, uid());
+    d.transition = t;
+    d.full.hideAt = coverAt(t);
+  });
+}
+byId('fsTake').onclick = fsTake;
+byId('fsClear').onclick = fsClear;
+byId('monitorClearFull').onclick = fsClear;
+
+// ── Transitions & OBS ───────────────────────────────────────────────────────
+let wipeSide = local.get('wipeSide', -1);
+const obs = new ObsLink(() => renderObs());
+async function fireWipe(scene) {
+  let t = null;
+  const ok = await change(d => { t = newTransition(d.style, serverNow(), wipeSide, uid()); d.transition = t; });
+  if (!ok || !t || !scene) return;
+  // Switch OBS when the wipe covers the screen.
+  setTimeout(() => obs.setScene(scene).catch(fail), Math.max(0, coverAt(t) - serverNow()));
+}
+function renderWipeCard() {
+  const teams = L().teams;
+  setText('wipeSide0', teams[0].short || 'Left');
+  setText('wipeSide1', teams[1].short || 'Right');
+  $$('#wipeSide [data-side]').forEach(b => b.setAttribute('aria-pressed', String(Number(b.dataset.side) === wipeSide)));
+}
+byId('wipeSide').onclick = event => {
+  const side = event.target.closest('[data-side]')?.dataset.side;
+  if (side === undefined) return;
+  wipeSide = Number(side);
+  local.set('wipeSide', wipeSide);
+  renderWipeCard();
+};
+byId('wipeGo').onclick = () => fireWipe();
+byId('wTest').onclick = () => fireWipe();
+
+function renderObs() {
+  const on = obs.state === 'on';
+  const label = {on: 'CONNECTED', connecting: 'CONNECTING', error: 'NOT CONNECTED', off: 'NOT CONNECTED'}[obs.state];
+  setText('obsState', label + (on && obs.current ? ` · ${obs.current}` : ''));
+  byId('obsState').classList.toggle('live', on);
+  setText('obsChip', on ? 'OBS' : 'OBS OFF');
+  byId('obsChip').classList.toggle('live', on);
+  byId('obsChip').title = obs.state === 'error' ? obs.error : '';
+  byId('obsConnect').disabled = obs.state === 'connecting';
+  byId('obsDisconnect').disabled = obs.state === 'off' || obs.state === 'error';
+  byId('obsSceneBox').hidden = !on;
+  byId('wipeHint').hidden = on;
+  const box = byId('obsScenes');
+  const signature = JSON.stringify([obs.scenes, obs.current]);
+  if (box.dataset.sig !== signature) {
+    box.dataset.sig = signature;
+    box.replaceChildren(...obs.scenes.map(name => {
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.textContent = name;
+      button.setAttribute('aria-pressed', String(name === obs.current));
+      button.title = `Wipe, and switch OBS to ${name} while the wipe covers the screen`;
+      button.onclick = () => fireWipe(name);
+      return button;
+    }));
+  }
+}
+byId('obsUrl').value = local.get('obsUrl', 'ws://127.0.0.1:4455');
+byId('obsPassword').value = local.get('obsPassword', '');
+byId('obsAuto').checked = local.get('obsAuto', false);
+byId('obsAuto').onchange = event => local.set('obsAuto', event.target.checked);
+async function connectObs(quiet = false) {
+  const url = byId('obsUrl').value.trim() || 'ws://127.0.0.1:4455';
+  local.set('obsUrl', url);
+  local.set('obsPassword', byId('obsPassword').value);
+  try {
+    await obs.connect(url, byId('obsPassword').value);
+    if (!quiet) toast(`OBS connected · ${obs.scenes.length} scenes`);
+  } catch {
+    if (!quiet) toast(obs.error || 'Could not connect to OBS.', 'error');
+  }
+}
+byId('obsConnect').onclick = () => connectObs();
+byId('obsDisconnect').onclick = () => obs.close();
+if (byId('obsAuto').checked) connectObs(true);
+
+// Wipe style, speed and studio logo save right away.
+byId('wStyle').onchange = event => change(d => { d.style.wipe = event.target.value; }, 'Wipe style saved');
+byId('wSpeed').onchange = event => change(d => { d.style.wipeSpeed = event.target.value; }, 'Wipe speed saved');
+byId('wBrand').onchange = async event => {
+  try {
+    const data = await readImage(event.target.files[0], {maxWidth: 720, maxHeight: 300, type: 'image/png'});
+    await change(d => { d.style.brandLogo = data; }, 'Studio logo saved');
+  } catch (error) { fail(error); }
+  event.target.value = '';
+};
+byId('wBrandClear').onclick = () => change(d => { d.style.brandLogo = ''; }, 'Studio logo removed');
+function renderTransitionStyle() {
+  const style = L().style;
+  if (document.activeElement !== byId('wStyle')) byId('wStyle').value = style.wipe || 'slash';
+  if (document.activeElement !== byId('wSpeed')) byId('wSpeed').value = style.wipeSpeed || 'normal';
+  const preview = byId('wBrandPreview');
+  preview.hidden = !validImage(style.brandLogo);
+  if (validImage(style.brandLogo) && preview.getAttribute('src') !== style.brandLogo) preview.src = style.brandLogo;
+  byId('wBrandClear').disabled = !style.brandLogo;
+}
+
 // ── Ticker tab ──────────────────────────────────────────────────────────────
 let tickerDirty = false;
 const markTickerDirty = () => { tickerDirty = true; setText('tickerDirty', 'Unsaved changes'); };
@@ -1240,10 +1534,11 @@ byId('newGame').onclick = async () => {
 
 function renderObsLinks() {
   const links = [
-    ['Full overlay', 'Scorebug, banner, graphics and ticker', overlayUrl(overlayKey)],
+    ['Full overlay', 'Scorebug, banner, graphics, ticker, full-screens and wipes', overlayUrl(overlayKey)],
     ['Scorebug + banner', 'Just the bug', overlayUrl(overlayKey, 'bug,banner')],
     ['Graphics only', 'Lower thirds', overlayUrl(overlayKey, 'graphic')],
     ['Ticker only', 'Score ticker', overlayUrl(overlayKey, 'ticker')],
+    ['Full-screens + wipes', 'Put it at the top of every scene (Add Existing), above the other overlay sources', overlayUrl(overlayKey, 'full,wipe')],
     ['Gamecast field', 'Virtual gamecast (put it below the scorebug)', new URL('/gamecast?output=1#key=' + overlayKey, location.origin).href],
     ['Gamecast control', 'Enter plays for the virtual gamecast', new URL('/gamecast', location.origin).href],
     ['Control panel dock', 'OBS → Docks → Custom Browser Docks', new URL('/control', location.origin).href],
@@ -1517,7 +1812,7 @@ addEventListener('keydown', event => {
   if (event.target.closest('input, select, textarea, dialog')) return;
   const actions = {
     ' ': () => toggleClock('game'), x: () => toggleClock('aux'), r: () => resetAux('40'), b: () => change(d => { d.bugVisible = !d.bugVisible; }),
-    Escape: () => change(d => { d.graphic = null; d.banner = null; }), 1: () => addPoints(0, 1), 2: () => addPoints(1, 1),
+    Escape: () => change(d => { d.graphic = null; d.banner = null; }), 1: () => addPoints(0, 1), 2: () => addPoints(1, 1), w: () => fireWipe(),
   };
   const action = actions[event.key.length === 1 ? event.key.toLowerCase() : event.key];
   if (action) { event.preventDefault(); action(); }
@@ -1533,6 +1828,9 @@ function render() {
   if (!teamsDirty) renderTeamEditors();
   renderStatsLinks();
   renderStatGraphics();
+  renderFullTab();
+  renderWipeCard();
+  renderTransitionStyle();
   renderGamePicker();
   renderGame();
   renderFeed();
@@ -1567,6 +1865,9 @@ byId('signOut').onclick = signOut;
     const previewUrl = new URL(overlayUrl(overlayKey, 'bug,graphic'));
     previewUrl.searchParams.set('preview', '1');
     byId('sgPreview').src = previewUrl.href;
+    const fullPreviewUrl = new URL(overlayUrl(overlayKey, 'full'));
+    fullPreviewUrl.searchParams.set('preview', '1');
+    byId('fsPreview').src = fullPreviewUrl.href;
     byId('openOverlay').href = url;
     byId('copyOverlayTop').onclick = () => copyText(url, 'OBS overlay URL');
     renderObsLinks();
