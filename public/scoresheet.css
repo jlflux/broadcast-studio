@@ -55,11 +55,11 @@ body.viewer .operatorOnly{display:none!important}
 .players .hd.b{background:#e9ecf1}
 .players .hd i{font-style:normal;display:inline-block;width:.1in;height:.1in;background:var(--c);margin-right:.05in}
 .pn{display:flex;flex-direction:column;justify-content:space-between;padding:.03in .05in .03in;position:relative}
-.pnTop{display:flex;align-items:baseline;gap:.05in;min-width:0}
-.pnNum{font-size:calc(var(--rh) * .36);font-weight:800;color:var(--c);line-height:.9;min-width:.28in}
-.pnName{min-width:0;line-height:1.02}
-.pnName b{display:block;font-size:calc(min(var(--rh) * .22, .17in));font-weight:800;text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.pnName span{display:block;font-size:calc(min(var(--rh) * .17, .12in));font-weight:600;color:#333;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pnTop{display:flex;align-items:center;gap:.05in;min-width:0;flex:1;min-height:0}
+.pnNum{font-size:calc(min(var(--rh) * .46, .42in));font-weight:800;color:var(--c);line-height:.9;min-width:.3in;flex:none}
+.pnName{min-width:0;flex:1;line-height:1}
+.pnName b{display:block;font-size:calc(min(var(--rh) * .36, .3in));font-weight:800;text-transform:uppercase;white-space:nowrap;overflow:hidden;letter-spacing:.005em}
+.pnName span{display:block;font-size:calc(min(var(--rh) * .2, .15in));font-weight:600;color:#333;white-space:nowrap;overflow:hidden;margin-top:.01in}
 .pnName span i{color:#555}
 .fouls{display:flex;gap:.035in;align-items:center;font-size:calc(min(var(--rh) * .2, .14in));font-weight:800}
 .fouls u{text-decoration:none;width:calc(min(var(--rh) * .25, .19in));height:calc(min(var(--rh) * .25, .19in));border:1.3px solid #333;border-radius:50%;display:grid;place-items:center;line-height:1}

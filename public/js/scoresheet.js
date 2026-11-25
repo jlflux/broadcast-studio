@@ -178,6 +178,7 @@ function render() {
   sheet.insertAdjacentHTML('beforeend', `<footer class="ssFoot"><span>${esc(teams[0].name)} vs. ${esc(teams[1].name)} · ${esc(opts.date)}</span><span>${fill ? `${stats.events.length} plays from the stat keeper · ` : ''}Broadcast Studio</span></footer>`);
   byId('sheets').replaceChildren(sheet);
   fitZoom();
+  fitNames(sheet);
 
   // Status line.
   const counts = players.map((list, i) => `${teams[i].short || teams[i].name} ${list.length}`).join(', ');
@@ -190,6 +191,22 @@ function render() {
         opts.fill ? 'No plays logged yet; it fills in as the stat keeper logs the game.' : 'Printing blank for scoring by hand.',
   ].filter(Boolean).join(' '));
   if (!viewer) renderEditor();
+}
+
+// Names fill their box; only names too long for it shrink (down to 55%).
+// The detail line under the name does the same, then ends in "…" if needed.
+function fitNames(sheet) {
+  for (const node of sheet.querySelectorAll('.pnName b, .pnName span')) {
+    node.style.fontSize = '';
+    const base = parseFloat(getComputedStyle(node).fontSize);
+    const floor = base * (node.tagName === 'B' ? 0.55 : 0.75);
+    let size = base;
+    while (node.scrollWidth > node.clientWidth + 0.5 && size > floor) {
+      size = Math.max(floor, size * 0.94);
+      node.style.fontSize = size + 'px';
+    }
+    if (node.scrollWidth > node.clientWidth + 0.5) node.style.textOverflow = 'ellipsis';
+  }
 }
 
 function pointsGrid(cells, pts, marks) {
