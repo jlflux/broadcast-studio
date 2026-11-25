@@ -1,6 +1,6 @@
 # Broadcast Studio
 
-Scorebug, lower-third graphics, score ticker and stat keeper for high school football and basketball streams in OBS. Run the game from a laptop, phone or OBS dock; the overlay updates in OBS within about a second.
+Scorebug, lower-third graphics, full-screen graphics, branded wipes, score ticker, stat keeper and printable spotting boards for high school football and basketball streams in OBS. Run the game from a laptop, phone or OBS dock; the overlay updates in OBS within about a second.
 
 It runs on Vercel with a Neon Postgres database (the same setup as the Homewood football scorebug), or entirely on one laptop with no internet (`npm run local`).
 
@@ -11,6 +11,7 @@ It runs on Vercel with a Neon Postgres database (the same setup as the Homewood 
 | `/control` | Control panel. **Live** is one game screen: each team's score, timeouts, fouls and roster on its side; clock, stat pad and game situation in the middle; program monitor across the top. Also: **Box score & plays** (line score, team stats, box score with On air buttons, play-by-play with delete, Save PDF, CSV export, backup/restore, new stat game) for the active game, stat graphics, graphics, ticker, teams, team builder, style, and scoreboard serial import |
 | `/stats` | Stat keeper: rosters, tap-player-then-action stat entry, box score, play-by-play. Sends the score (and basketball team fouls) to the scorebug. Play entry is also built into the control panel's Live tab; the box score, play-by-play and rosters are in its **Box score & plays** tab. Open `/stats` on its own for a second screen or tablet |
 | `/overlay` | The OBS Browser Source (1920 × 1080, transparent) |
+| `/spotting` | Printable spotting boards for the announcers, built from the saved teams and rosters |
 | `/gamecast` | Virtual gamecast for games without video: enter each play and it draws on a digital field. Its OBS source is `/gamecast?output=1#key=…` |
 
 **Scorebug.** Football and basketball, each with its own saved game, so switching sports keeps both games. Four layouts: a wide **broadcast bar**, a slim **ribbon bar** (name plates, team-color logo tiles and score slabs around an angled clock tile), **team cards + clock tile** (two team cards meeting at a raised clock tile), and a compact **corner box**. Ribbon and badge use a name plate / card color you set in Style. All layouts can be placed in any of six positions with size and nudge controls. It shows timeouts, possession, down & distance or a status (FLAG, TIMEOUT, REVIEW…), the play clock or shot clock, team fouls, and a BONUS tag. Clocks run on the server's time, so every screen agrees. Basketball shows tenths under a minute.
@@ -22,6 +23,14 @@ It runs on Vercel with a Neon Postgres database (the same setup as the Homewood 
 **Stat graphics (basketball).** The control panel's **Stat graphics** tab turns the stat keeper's numbers into ready-made graphics. Tap a player to see their graphics with the numbers filled in: game line, scoring, three-pointers, free throws, this quarter, rebounds, assists, steals and blocks, double-doubles and fouls. Team graphics sit below: team stats, this quarter, shooting, game leaders, scoring by quarter, each team's leading scorers and the current run (4-0 or more). Tap one to see it in the preview, then **Take live**, or hit **Take** on a row to skip the preview. The numbers are locked in when you take a graphic, so they don't change while it's on air; take it again to update it. **Edit in Graphics tab** opens it in the graphic editor first.
 
 **Player photos.** Photos fill a fixed box on the left of player graphics (about square, as tall as the card), so a tall or wide picture never makes a graphic bigger. The whole photo is kept; you choose which part shows. In the stat keeper's **Rosters** tab, tap a player's photo to pick **Up/down** (top, center, bottom) and **Left/right** (left, center, right). The Graphics tab in the control panel has the same choices for a photo you upload there.
+
+**Full-screens.** The control panel's **Full-screens** tab has five full-screen graphics: **Matchup** (both logos, names, rankings and records, with the event and venue), **Lineup** (pick up to 5 basketball starters for photo cards, or up to 12 football players for a list, in the order you tap them), **Keys to the game** (up to five, for one team or both), **Score & stats** (the scorebug's score, the score by quarter when the stat keeper matches it, and team stats) and **Leaders** (each team's top player in points, rebounds, assists and steals, or passing, rushing, receiving and tackles). Leave the label blank on stat screens and it reads Halftime, Final or the quarter. See it in the preview, then **Take full-screen**. With **Wipe in and out** on, it goes up and comes down under a wipe. The scorebug, banner and lower thirds step aside while it's up; a corner ticker hides and a bottom-bar ticker stays. Numbers are locked in when you take it.
+
+**Transitions (wipes).** Branded wipes in the team or studio colors: **Slash**, **Stripes** or **Iris**, normal (1.4 s) or fast (1 s), with the team logo (or your studio logo) in the middle. Pick the style, speed and studio logo in **Style → Transitions & full-screens**. On Live, the **Transition** card plays a wipe in the studio color or either team's color (**W** on the keyboard). Wipes are scheduled about a second ahead on the server's clock, so every overlay plays them at the same moment.
+
+**OBS connection.** In **Style → OBS connection**, connect to OBS's WebSocket server (OBS 28+: **Tools → WebSocket Server Settings**). The Transition card then shows a button for each OBS scene: press one and OBS switches to that scene while the wipe covers the screen. Set the OBS scene transition to **Cut**, and put the overlay (or the **Full-screens + wipes** source) in every scene with **Add Existing** so the wipe carries across the switch. The address and password are saved in this browser only.
+
+**Spotting boards.** `/spotting` (or **Spotting boards ↗** at the top of the control panel) prints boards from the teams and rosters in the Team builder, starting with today's game. Football prints a page per team, by number or split into offense and defense (two-way players show on both sides; specialists along the bottom). Basketball fits both teams on one page, or one per page. Letter or 11 × 17. Each player shows number, name, position, year, and optionally height and weight, a pronunciation and a note. Fill those in under **Board details** (plus the head coach and a line of team notes); they save to the team's roster, so they're there the next time you play that team. Pasted and imported rosters keep height and weight when they have them.
 
 **Teams.** Build teams once in the control panel's **Team builder** tab: name, abbreviation, ranking, record, colors, logo, and a basketball and a football roster (paste, PDF/CSV import, or one at a time, with player photos and photo alignment). On game day, open **Teams → Today's game**, pick the left and right teams, and press **Load teams**: the scorebug gets each team's info and logo, and the stat keeper gets the roster for the current sport (empty if the team has none saved, so the last opponent's players don't stay behind). If plays are already logged for a side, you're asked before its roster is replaced. Editing a team that's in today's game updates the scorebug and stat keeper when you save. **Quick edit** on the Teams tab changes this game only; **Save team profile** there writes the change back to the saved team. Rosters saved with the stat keeper's **Save roster** button are the same rosters, matched by team name.
 
@@ -56,7 +65,7 @@ Use the production URL in OBS. If Vercel Deployment Protection is on for product
 
 1. In the control panel, open **Style → OBS sources** (or click **Copy OBS URL** at the top).
 2. In OBS add a **Browser Source**, paste the full URL (it ends in `#key=…`), set **1920 × 1080**, and leave "Shutdown source when not visible" **unchecked**.
-3. Optional: use the split URLs (`?layers=bug,banner`, `?layers=graphic`, `?layers=ticker`) as separate sources so you can hide or move layers in OBS.
+3. Optional: use the split URLs (`?layers=bug,banner`, `?layers=graphic`, `?layers=ticker`, `?layers=full,wipe`) as separate sources so you can hide or move layers in OBS. Keep the `full,wipe` source on top.
 4. Optional: add the control panel as an OBS **Custom Browser Dock**.
 
 The overlay key gives read-only access to what's on air. It changes if you change the password.
@@ -75,7 +84,7 @@ Open `http://localhost:3000/control`. Data is saved in `./data`. To let a tablet
 - **One score source.** The stat keeper's **Send score to scorebug**, ScoreSight and the serial import can all write the score. Pick one, or turn off the stat keeper's auto-send when the scoreboard feed is running. If the stat keeper and the bug ever disagree, a yellow bar offers **Set scorebug to stats**.
 - **Next period** advances the quarter and resets the game clock. Football also restores timeouts at the half; basketball also resets team fouls (NFHS quarter fouls) and the shot clock.
 - **Swap sides** flips teams, scores, timeouts, fouls and possession, and the stat keeper's teams and plays with them.
-- **Keyboard shortcuts** (turn on in the control panel): Space game clock, X play/shot clock, R reset play/shot clock, B scorebug, Esc clear graphic and banner, 1/2 add a point. Stat keeper: U undo, Esc deselect.
+- **Keyboard shortcuts** (turn on in the control panel): Space game clock, X play/shot clock, R reset play/shot clock, B scorebug, Esc clear graphic and banner, W wipe, 1/2 add a point. Stat keeper: U undo, Esc deselect.
 - The stat keeper keeps a backup of the last cleared game in the browser, and **Download backup** saves the whole game as JSON.
 
 ## Scoreboard camera (ScoreSight)
@@ -100,7 +109,7 @@ The clock runs on its own while the readings count down and stops when they hold
 ## Development
 
 ```bash
-npm test                                   # API, stat engine, roster parser, serial decoding
+npm test                                   # API, stat engine, roster parser, serial decoding, full-screens, wipes, spotting layout
 LOCAL_PG_URL=postgres://… npm test         # also runs the API test against real Postgres
 ```
 

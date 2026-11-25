@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Broadcast Studio · Spotting boards</title>
+<link rel="stylesheet" href="/studio.css">
+<link rel="stylesheet" href="/spotting.css">
+<style id="pageSize">@page{size:11in 8.5in;margin:0}</style>
+<script type="module" src="/js/spotting.js"></script>
+</head>
+<body>
+<header class="top noprint">
+  <div class="brand"><div class="mark" aria-hidden="true"><i></i><i></i><i></i></div><div><h1>Spotting boards</h1><small>BROADCAST STUDIO</small></div></div>
+  <div class="row">
+    <span id="connection" class="connection" role="status">Connecting</span>
+    <a href="/control">Control panel</a>
+    <button type="button" class="primary big" id="spPrint">Print</button>
+  </div>
+</header>
+<div id="startupError" class="login card noprint" hidden></div>
+<main id="app" class="spMain noprint" hidden>
+  <section class="card">
+    <div class="spControls">
+      <div><span class="label">Sport</span><div class="segmented" id="spSport" role="group" aria-label="Sport"><button type="button" data-sport="football">Football</button><button type="button" data-sport="basketball">Basketball</button></div></div>
+      <label>Left team<select id="spLeft"></select></label>
+      <label>Right team<select id="spRight"></select></label>
+      <label class="spFootball">Layout<select id="spLayout"><option value="number">By number</option><option value="units">Offense / defense</option></select></label>
+      <label class="spBasketball">Pages<select id="spPages"><option value="together">Both teams on one page</option><option value="separate">One team per page</option></select></label>
+      <label>Paper<select id="spPaper"><option value="letter">Letter (8.5 × 11)</option><option value="tabloid">Tabloid (11 × 17)</option></select></label>
+    </div>
+    <div class="row" style="margin-top:12px">
+      <label class="check"><input type="checkbox" id="spSay"> Pronunciations</label>
+      <label class="check"><input type="checkbox" id="spSize"> Height &amp; weight</label>
+      <label class="check"><input type="checkbox" id="spNotes"> Player notes</label>
+      <label class="check spBasketball"><input type="checkbox" id="spPhotos"> Photos</label>
+      <span class="hint spFootball" style="margin:0" id="spUnitsHint">Offense / defense fits best on 11 × 17.</span>
+      <span class="hint" style="margin:0 0 0 auto" id="spInfo"></span>
+    </div>
+  </section>
+</main>
+<div id="sheets"></div>
+<section class="card spEditor noprint" id="editor" hidden>
+  <header><h2>Board details</h2><div class="row"><span class="muted" id="edSaved"></span><div class="segmented" id="edSide" role="group" aria-label="Team"><button type="button" data-side="0" id="edSide0">Left</button><button type="button" data-side="1" id="edSide1">Right</button></div></div></header>
+  <p class="hint" style="margin-top:0">Add what the announcers need: pronunciations, height and weight, and a note per player (season stats, college commitment, a storyline). It saves to the team's roster as you go, so it's there for every game against this team.</p>
+  <div class="grid2" style="margin-bottom:12px">
+    <label>Head coach<input id="edCoach" maxlength="60"></label>
+    <label>Team notes (printed in the header)<input id="edTeamNotes" maxlength="200" placeholder="Region 5 · Won 6 straight · State semifinalist last year"></label>
+  </div>
+  <div class="scroll"><table class="edTable" id="edTable"><thead><tr><th>#</th><th>Name</th><th>Pos</th><th>Yr</th><th>Ht</th><th>Wt</th><th>Pronunciation</th><th>Notes</th></tr></thead><tbody></tbody></table></div>
+</section>
+</body>
+</html>

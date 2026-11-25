@@ -37,6 +37,9 @@ export const defaultStyle = () => ({
   possColor: '#e3262f',      // possession arrow / marker
   shotColor: '#aeb8c6',      // basketball shot clock border (football uses the team with the ball)
   panel: '#f2f4f7',          // ribbon name plates / badge cards
+  wipe: 'slash',             // transition: 'slash' | 'stripes' | 'iris'
+  wipeSpeed: 'normal',       // 'normal' (1.4 s) | 'fast' (1 s)
+  brandLogo: '',             // shown on studio-colored wipes and full-screens
 });
 
 export function defaultLive() {
@@ -54,6 +57,8 @@ export function defaultLive() {
     games: {football: freshGame('football', settings), basketball: freshGame('basketball', settings)},
     banner: null,
     graphic: null,
+    full: null,        // full-screen graphic {kind, showAt, hideAt, …}
+    transition: null,  // last wipe {id, style, speed, side, at}
   };
 }
 

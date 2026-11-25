@@ -6,10 +6,12 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Studio Overlay</title>
 <link rel="stylesheet" href="/overlay.css">
+<link rel="stylesheet" href="/fullscreen.css">
 <script type="module" src="/js/overlay.js"></script>
 </head>
 <body>
 <div id="canvas">
+  <section id="full" hidden></section>
   <div id="stack">
     <section id="stackGraphic" class="graphic" hidden></section>
     <div id="banner" class="banner" hidden><img id="bannerImage" alt="" hidden><span id="bannerText"></span></div>
@@ -17,6 +19,7 @@
   </div>
   <section id="lowerGraphic" class="graphic" hidden></section>
   <div id="ticker" hidden><div id="tkLabel" class="tk-label"></div><div id="tkStage" class="tk-stage"></div></div>
+  <div id="wipe" hidden></div>
   <div id="keyMissing" hidden>Copy the overlay URL from the control panel. It includes the overlay key.</div>
 </div>
 </body>

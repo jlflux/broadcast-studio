@@ -65,3 +65,9 @@ test('roster parsing', () => {
   ]);
   assert.deepEqual(parseRoster('No,Name,Pos,Yr\n3,Jalen Ward,G,Sr'), [{num: '3', name: 'Jalen Ward', pos: 'G', cls: 'Sr'}]);
 });
+
+test('roster parser keeps height and weight for spotting boards', async () => {
+  const {parseRoster} = await import('../public/js/stats-engine.js');
+  assert.deepEqual(parseRoster('7 Marcus Hill QB Sr 6-2 195 lbs'), [{num: '7', name: 'Marcus Hill', pos: 'QB', cls: 'Sr', ht: '6-2', wt: '195'}]);
+  assert.deepEqual(parseRoster('No,Name,Pos,Ht,Wt\n3,Jalen Ward,G,6-1,180 lbs'), [{num: '3', name: 'Jalen Ward', pos: 'G', cls: '', ht: '6-1', wt: '180'}]);
+});

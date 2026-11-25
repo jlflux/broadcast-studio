@@ -17,6 +17,7 @@
     <span id="serialChip" class="onair" hidden>SCOREBOARD</span>
     <a href="/stats" target="_blank" rel="noopener" title="Open the stat keeper in its own window (for a second screen or tablet)">Stat keeper window ↗</a>
     <a href="/gamecast" target="_blank" rel="noopener" title="Virtual gamecast: enter each play and it draws on a digital field, for games without video">Gamecast ↗</a>
+    <a href="/spotting" target="_blank" rel="noopener" title="Printable spotting boards for the announcers, built from your saved rosters">Spotting boards ↗</a>
     <button id="copyOverlayTop" type="button">Copy OBS URL</button>
     <button id="signOut" type="button" class="ghost">Sign out</button>
   </div>
@@ -33,7 +34,7 @@
     <div class="row" id="statsSync" hidden><span class="muted" id="statsSyncText"></span><button id="statsSyncApply" type="button">Set scorebug to stats</button></div>
   </div>
   <nav class="tabs" aria-label="Sections">
-    <button data-tab="live" aria-current="page">Live</button><button data-tab="stats">Box score &amp; plays</button><button data-tab="statgfx">Stat graphics</button><button data-tab="graphics">Graphics</button><button data-tab="ticker">Ticker</button><button data-tab="teams">Teams</button><button data-tab="builder">Team builder</button><button data-tab="style">Style</button><button data-tab="scoreboard">Scoreboard data</button>
+    <button data-tab="live" aria-current="page">Live</button><button data-tab="stats">Box score &amp; plays</button><button data-tab="statgfx">Stat graphics</button><button data-tab="graphics">Graphics</button><button data-tab="full">Full-screens</button><button data-tab="ticker">Ticker</button><button data-tab="teams">Teams</button><button data-tab="builder">Team builder</button><button data-tab="style">Style</button><button data-tab="scoreboard">Scoreboard data</button>
   </nav>
   <div class="workspace">
     <div class="editor">
@@ -79,6 +80,19 @@
             <label>Team color<select id="bannerSide"></select></label>
             <div class="inline"><label style="flex:1">Seconds<input id="bannerSeconds" type="number" min="0" max="120" title="0 keeps it up until cleared"></label><button class="primary">Show</button><button type="button" id="bannerClear">Clear</button></div>
           </form>
+        </section>
+        <section class="card" id="wipeCard">
+          <header><h2>Transition</h2><span class="onair" id="obsChip">OBS OFF</span></header>
+          <div class="row">
+            <span class="label" style="margin:0">Wipe color</span>
+            <div class="segmented" id="wipeSide" role="group" aria-label="Wipe color"><button type="button" data-side="-1">Studio</button><button type="button" data-side="0" id="wipeSide0">Left</button><button type="button" data-side="1" id="wipeSide1">Right</button></div>
+            <button type="button" class="primary" id="wipeGo" title="Play the wipe over the program (W)">Wipe</button>
+          </div>
+          <div id="obsSceneBox" hidden>
+            <span class="label" style="margin:12px 0 6px">Wipe to an OBS scene (it switches while the wipe covers the screen)</span>
+            <div class="row" id="obsScenes"></div>
+          </div>
+          <p class="hint" id="wipeHint" style="margin:10px 0 0">Connect OBS in Style → OBS connection to switch scenes under the wipe. Without it, the wipe still plays over whatever is on air.</p>
         </section>
       </section>
 
@@ -175,6 +189,42 @@
             <div class="row"><button class="primary" id="bnSave">Save banner</button><button type="button" id="bnShow">Show now</button><button type="button" class="ghost" id="bnNew">New banner</button><span class="muted" id="bnEditing"></span></div>
           </form>
           <div id="bnList" class="list" style="margin-top:12px"></div>
+        </section>
+      </section>
+
+      <!-- FULL-SCREENS -->
+      <section id="tab-full" hidden>
+        <section class="card">
+          <header><h2>Preview</h2><span class="onair" id="fsState">OFF AIR</span></header>
+          <div class="monitorFrame"><iframe id="fsPreview" title="Full-screen preview" tabindex="-1"></iframe><span class="frameTag">PREVIEW</span></div>
+          <div class="between" style="margin-top:10px">
+            <div class="row"><button type="button" class="primary big" id="fsTake">Take full-screen</button><label class="check" title="Play the wipe in and out, so the full-screen changes while the wipe covers the screen"><input type="checkbox" id="fsWipe"> Wipe in and out</label></div>
+            <div class="row"><button type="button" class="danger" id="fsClear">Clear full-screen</button></div>
+          </div>
+          <p class="hint" style="margin:10px 0 0">The scorebug, banner and lower thirds step aside while a full-screen is up and come back when you clear it. Numbers are locked in when you take it; take it again to update.</p>
+        </section>
+        <section class="card">
+          <header><h2>Full-screen</h2><div class="segmented" id="fsKind" role="group" aria-label="Full-screen"></div></header>
+          <div class="grid3">
+            <label>Label (small, above)<input id="fsKicker" maxlength="60"></label>
+            <label>Headline<input id="fsTitle" maxlength="90"></label>
+            <label>Bottom line<input id="fsSub" maxlength="140" placeholder="Live from Waldrop Stadium"></label>
+          </div>
+          <div data-for="lineup keys" class="grid3" style="margin-top:10px">
+            <label>Team<select id="fsSide"></select></label>
+            <p class="hint fsKindHint" data-for="lineup" style="grid-column:span 2;align-self:end;margin:0" id="fsLineupHint"></p>
+          </div>
+          <div data-for="lineup" style="margin-top:12px">
+            <div class="between"><span class="label" style="margin:0" id="fsPickLabel">Players</span><div class="row"><span class="muted" id="fsPickCount"></span><button type="button" class="ghost" id="fsPickClear">Clear picks</button></div></div>
+            <div class="fsPicks" id="fsPicks"></div>
+          </div>
+          <div data-for="keys" class="stack" style="margin-top:12px" id="fsPoints"></div>
+          <div data-for="stats" style="margin-top:12px">
+            <label class="check"><input type="checkbox" id="fsShowLine"> Show the score by quarter (when the stat keeper matches the scorebug)</label>
+            <p class="hint" style="margin:8px 0 0" id="fsStatsHint"></p>
+          </div>
+          <p class="hint" data-for="leaders" style="margin:12px 0 0" id="fsLeadersHint"></p>
+          <p class="hint" data-for="matchup" style="margin:12px 0 0">Team names, logos, rankings and records come from the scorebug. Put the event in the headline (Region 5 · Week 9) and the venue in the bottom line.</p>
         </section>
       </section>
 
@@ -277,6 +327,33 @@
           <div class="row" style="justify-content:space-between;margin-bottom:12px"><button type="button" class="danger" id="newGame">Start new game…</button><button class="primary big">Save style &amp; rules</button></div>
         </form>
         <section class="card">
+          <header><h2>Transitions &amp; full-screens</h2></header>
+          <div class="grid4" style="align-items:end">
+            <label>Wipe style<select id="wStyle"><option value="slash">Slash</option><option value="stripes">Stripes</option><option value="iris">Iris</option></select></label>
+            <label>Wipe speed<select id="wSpeed"><option value="normal">Normal (1.4 s)</option><option value="fast">Fast (1 s)</option></select></label>
+            <label>Studio logo (on studio wipes and full-screens)<input type="file" id="wBrand" accept="image/png,image/jpeg,image/webp,image/svg+xml"></label>
+            <div class="row"><img id="wBrandPreview" class="brandPreview" alt="" hidden><button type="button" class="ghost" id="wBrandClear">Remove logo</button></div>
+          </div>
+          <div class="row" style="margin-top:10px"><button type="button" id="wTest">Test wipe</button><span class="hint" style="margin:0">Changes here save right away. Test wipe plays it on air.</span></div>
+        </section>
+        <section class="card">
+          <header><h2>OBS connection</h2><span class="onair" id="obsState">NOT CONNECTED</span></header>
+          <p class="hint">Lets the Transition card switch OBS scenes while a wipe covers the screen. Saved on this computer only. In OBS: <b>Tools → WebSocket Server Settings</b>, check <b>Enable WebSocket server</b>, then <b>Show Connect Info</b> for the port and password.</p>
+          <div class="grid4" style="align-items:end">
+            <label>OBS address<input id="obsUrl" placeholder="ws://127.0.0.1:4455" autocomplete="off"></label>
+            <label>Password<input id="obsPassword" type="password" autocomplete="off"></label>
+            <div class="row" style="flex-wrap:nowrap"><button type="button" class="primary" id="obsConnect">Connect</button><button type="button" id="obsDisconnect">Disconnect</button></div>
+            <label class="check"><input type="checkbox" id="obsAuto"> Connect when this page opens</label>
+          </div>
+          <details style="margin-top:10px"><summary class="muted" style="cursor:pointer">Set up OBS for wipes</summary>
+            <ol class="muted" style="margin:8px 0 0;padding-left:20px;line-height:1.6">
+              <li>Put the full overlay (or the <b>Full-screens + wipes</b> source below) at the top of every scene. Use <b>Add Existing</b> so every scene shares the same source and the wipe carries across the switch.</li>
+              <li>Set the OBS scene transition to <b>Cut</b>. The wipe is the transition; OBS just switches underneath it.</li>
+              <li>If OBS runs on another computer, use its address (ws://192.168.1.20:4455). Chrome may ask to allow access to devices on your network; allow it.</li>
+            </ol>
+          </details>
+        </section>
+        <section class="card">
           <header><h2>OBS sources</h2></header>
           <p class="hint">Add a Browser Source at 1920 × 1080 and leave "Shutdown source when not visible" unchecked. Use the full overlay, or split layers into separate sources to control them in OBS.</p>
           <div id="obsLinks" class="list"></div>
@@ -373,6 +450,7 @@
         <div class="monitorFrame"><iframe id="preview" title="Overlay preview" tabindex="-1"></iframe></div>
         <div class="between" style="margin-top:10px"><span class="muted" id="monitorBug"></span><a id="openOverlay" target="_blank" rel="noopener">Open overlay ↗</a></div>
         <div class="onAirLine"><div><span class="label">Graphic</span><strong id="graphicLive">None</strong></div><button type="button" id="monitorClearGraphic">Clear</button></div>
+        <div class="onAirLine"><div><span class="label">Full-screen</span><strong id="fullLive">None</strong></div><button type="button" id="monitorClearFull">Clear</button></div>
         <div class="onAirLine"><div><span class="label">Banner</span><strong id="bannerLive">None</strong></div><button type="button" id="monitorClearBanner">Clear</button></div>
         <div class="onAirLine"><div><span class="label">Ticker</span><strong id="tickerLive">Off</strong></div><button type="button" id="monitorTicker">Show</button></div>
       </section>
@@ -394,7 +472,7 @@
       </section>
       <section class="card keys">
         <header><h2>Keyboard</h2><label class="check"><input type="checkbox" id="keysOn"> Enable</label></header>
-        <div class="muted keyList"><span><kbd>Space</kbd> game clock</span><span><kbd>X</kbd> <span class="auxName">play clock</span></span><span><kbd>R</kbd> reset <span class="auxName">play clock</span></span><span><kbd>B</kbd> scorebug</span><span><kbd>Esc</kbd> clear graphic &amp; banner</span><span><kbd>1</kbd>/<kbd>2</kbd> +1 left/right</span></div>
+        <div class="muted keyList"><span><kbd>Space</kbd> game clock</span><span><kbd>X</kbd> <span class="auxName">play clock</span></span><span><kbd>R</kbd> reset <span class="auxName">play clock</span></span><span><kbd>B</kbd> scorebug</span><span><kbd>Esc</kbd> clear graphic &amp; banner</span><span><kbd>W</kbd> wipe</span><span><kbd>1</kbd>/<kbd>2</kbd> +1 left/right</span></div>
       </section>
     </aside>
   </div>

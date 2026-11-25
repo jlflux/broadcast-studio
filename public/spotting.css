@@ -1,0 +1,86 @@
+/* Spotting boards: controls on screen, white letter/tabloid pages for print. */
+*{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.spMain,.spEditor{max-width:1320px;margin:16px auto;padding:0 18px}
+.spEditor{margin-bottom:40px}
+.spControls{display:grid;grid-template-columns:auto repeat(4,minmax(0,1fr));gap:12px;align-items:end}
+body.football .spBasketball,body.basketball .spFootball{display:none!important}
+.label{display:block;font-size:12px;color:#c1cddb;font-weight:600;margin-bottom:4px}
+.connection{font-size:12px;color:var(--sub)}
+.connection.online{color:var(--green)}
+.edTable{width:100%;border-collapse:collapse}
+.edTable th{font-size:11px;text-align:left;color:var(--sub);padding:4px;font-weight:700}
+.edTable td{padding:2px 3px}
+.edTable td:nth-child(1){width:54px}.edTable td:nth-child(3),.edTable td:nth-child(4),.edTable td:nth-child(5),.edTable td:nth-child(6){width:70px}
+.edTable td:nth-child(2){width:190px}.edTable td:nth-child(7){width:170px}
+.edTable input{min-height:30px!important;padding:3px 6px!important}
+
+/* ── Pages ────────────────────────────────────────────────────────────────── */
+#sheets{display:flex;flex-direction:column;align-items:center;gap:24px;padding:8px 0 30px;zoom:var(--z,1)}
+.sheet{width:var(--w);height:calc(var(--h) - 1px);padding:.3in;background:#fff;color:#111;box-shadow:0 8px 30px #0008;display:flex;flex-direction:column;gap:.1in;overflow:hidden;font-family:"Barlow Condensed","Arial Narrow",Arial,sans-serif;position:relative}
+.sheet *{box-sizing:border-box}
+.sh{height:.85in;flex:none;display:flex;align-items:stretch;gap:.15in;border-radius:6px;overflow:hidden;background:linear-gradient(90deg,var(--c),var(--cd));color:var(--ci);border-bottom:.06in solid var(--ca)}
+.shLogo{width:.85in;flex:none;display:grid;place-items:center;padding:.06in;background:#ffffff1f}
+.shLogo img{max-width:100%;max-height:100%;object-fit:contain}
+.shLogo img.backed{background:#fff;border-radius:50%;padding:6%}
+.shLogo span{font-weight:800;font-size:.34in}
+.shText{flex:none;display:flex;flex-direction:column;justify-content:center;min-width:0;max-width:45%}
+.shText h1{font:800 .44in/1 "Barlow Condensed",Arial Narrow,sans-serif;text-transform:uppercase;letter-spacing:.01em;margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:inherit}
+.shText p{margin:.03in 0 0;font-size:.17in;font-weight:600;opacity:.9;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.shNotes{flex:1;align-self:center;font-size:.16in;font-weight:600;line-height:1.2;opacity:.95;overflow:hidden;max-height:.62in;padding-left:.12in;border-left:1px solid currentColor}
+.shNotes:empty{border:0}
+.shTag{flex:none;align-self:center;text-align:right;padding-right:.18in;font-size:.15in;font-weight:800;letter-spacing:.12em;text-transform:uppercase;line-height:1.25;opacity:.9}
+.sh.game{background:linear-gradient(90deg,var(--c0),var(--cd0) 49.9%,var(--cd1) 50.1%,var(--c1));color:#fff;border-bottom-color:#222}
+.sh.game .shText{max-width:none;flex:1;align-items:center;text-align:center}
+.sh.game .shText p{opacity:.95}
+.sf{height:.18in;flex:none;display:flex;justify-content:space-between;font:600 .12in/1 Arial,sans-serif;color:#777}
+.area{flex:1;min-height:0;display:flex;flex-direction:column;gap:.1in}
+.empty{font-size:.22in;color:#888;margin:.3in auto}
+
+/* Football boxes */
+.grid{flex:1;min-height:0;display:grid;grid-template-columns:repeat(var(--cols),minmax(0,1fr));grid-template-rows:repeat(var(--rows),var(--bh));grid-auto-flow:column;gap:.045in;align-content:start}
+.box{display:grid;grid-template-columns:min(calc(var(--bh) * 1.02),.75in) minmax(0,1fr);border:1px solid #b8bec8;border-radius:4px;overflow:hidden;background:#fff;min-height:0}
+.box .num{background:linear-gradient(180deg,var(--c),var(--cd));color:var(--ci);display:grid;place-items:center;font-weight:800;font-size:min(calc(var(--bh) * .6),.5in);line-height:1;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.box.long .num{font-size:calc(var(--bh) * .46)}
+.who{padding:calc(var(--bh) * .05) calc(var(--bh) * .1);min-width:0;display:flex;flex-direction:column;justify-content:center;line-height:1.08;overflow:hidden}
+.nm{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:calc(var(--bh) * .2);font-weight:600;color:#333}
+.nm b{font-size:calc(var(--bh) * .33);font-weight:800;text-transform:uppercase;color:#000;letter-spacing:.01em}
+.meta{font-size:calc(var(--bh) * .19);font-weight:700;color:#222;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.meta .pos{color:var(--cd);font-weight:800}
+.say{font-size:calc(var(--bh) * .17);font-style:italic;color:#555;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.note{font-size:calc(var(--bh) * .16);color:#333;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.units{flex:1;min-height:0;display:grid;grid-template-columns:1fr 1fr;gap:.15in}
+.unit{display:flex;flex-direction:column;min-height:0;gap:.05in}
+.unitHead{flex:none;font-weight:800;font-size:.17in;letter-spacing:.14em;text-transform:uppercase;color:#fff;background:#222;border-radius:3px;padding:.02in .08in;display:flex;justify-content:space-between}
+.unitHead span{opacity:.7;letter-spacing:.04em}
+.strip{flex:none;display:flex;flex-direction:column;gap:.05in}
+
+/* Basketball tables */
+.bbCols{flex:1;min-height:0;display:grid;grid-template-columns:repeat(var(--teams),minmax(0,1fr));gap:.2in}
+.bbTeam{display:flex;flex-direction:column;min-height:0;gap:.05in}
+.bbHead{flex:none;height:.5in;display:flex;align-items:center;gap:.1in;background:linear-gradient(90deg,var(--c),var(--cd));color:var(--ci);border-radius:4px;overflow:hidden;border-bottom:.04in solid var(--ca)}
+.bbHead .shLogo{width:.5in;height:100%;padding:.04in}
+.bbHead b{font-size:.28in;font-weight:800;text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bbHead small{font-size:.14in;font-weight:600;opacity:.9;margin-left:auto;padding-right:.1in;white-space:nowrap}
+.bbNotes{flex:none;font-size:.14in;font-weight:600;color:#333;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bbTable{width:100%;border-collapse:collapse;table-layout:fixed}
+.bbTable th{font-size:.12in;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#555;text-align:left;padding:0 .05in .02in;border-bottom:2px solid #222;height:.22in}
+.bbTable td{height:var(--rh);border-bottom:1px solid #c9ced6;padding:0 .05in;vertical-align:middle;overflow:hidden}
+.bbTable tr:nth-child(even) td{background:#f3f5f8}
+.bbTable .n{width:calc(var(--rh) * 1.15 + .1in);text-align:center;font-weight:800;font-size:calc(var(--rh) * .62);background:linear-gradient(180deg,var(--c),var(--cd))!important;color:var(--ci);font-variant-numeric:tabular-nums;padding:0}
+.bbTable th.n.hd{background:none!important;color:#555;font-size:.12in}
+.bbTable .ph{width:calc(var(--rh) + .04in);padding:.02in}
+.bbTable .ph img{width:calc(var(--rh) - .04in);height:calc(var(--rh) - .04in);object-fit:cover;border-radius:3px;display:block}
+.bbTable .pl{width:34%}
+.bbTable .pl b{display:block;font-size:min(.24in,calc(var(--rh) * .42));text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.05}
+.bbTable .pl span{display:block;font-size:min(.15in,calc(var(--rh) * .27));color:#444;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bbTable .pl i{color:#666}
+.bbTable .s{width:.42in;font-size:min(.17in,calc(var(--rh) * .34));font-weight:700;text-align:center}
+.bbTable .s.ht{width:.5in}
+.bbTable .nt{font-size:min(.14in,calc(var(--rh) * .27));line-height:1.15;color:#222;white-space:normal}
+
+@media print{
+  body{background:#fff;margin:0}
+  .noprint{display:none!important}
+  #sheets{zoom:1!important;padding:0;gap:0;display:block}
+  .sheet{box-shadow:none;margin:0;break-after:page;page-break-after:always}
+}
