@@ -13,7 +13,7 @@ form.onsubmit = async event => {
       body: JSON.stringify({password: document.getElementById('password').value}),
     });
     if (response.ok) {
-      location.replace(next === 'stats' ? '/stats' : next === 'gamecast' ? '/gamecast' : next === 'spotting' ? '/spotting' : '/control');
+      location.replace(next === 'stats' ? '/stats' : next === 'gamecast' ? '/gamecast' : next === 'spotting' ? '/spotting' : next === 'scoresheet' ? '/scoresheet' : '/control');
       return;
     }
     status.textContent = (await response.json()).error || 'Sign-in is temporarily unavailable.';

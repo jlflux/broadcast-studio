@@ -9,6 +9,7 @@
     { "source": "/stats", "destination": "/stats.html" },
     { "source": "/gamecast", "destination": "/gamecast.html" },
     { "source": "/spotting", "destination": "/spotting.html" },
+    { "source": "/scoresheet", "destination": "/scoresheet.html" },
     { "source": "/login", "destination": "/login.html" }
   ],
   "headers": [
