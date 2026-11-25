@@ -193,3 +193,8 @@ span.savedBanner{border-radius:6px;padding:4px 10px;font-size:12.5px;max-width:3
 #tab-full .monitorFrame{background:#05080d}
 .brandPreview{height:34px;max-width:140px;object-fit:contain;background:#0a111b;border:1px solid var(--line);border-radius:6px;padding:3px}
 #obsScenes button{min-width:90px}
+
+/* The OBS password is a plain text box drawn as dots. A real password field
+   makes Chrome treat the whole control panel as a login form and offer to
+   save other fields (keys to the game, headlines) as usernames. */
+input.masked{-webkit-text-security:disc;text-security:disc}

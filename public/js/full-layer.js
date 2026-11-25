@@ -1,7 +1,7 @@
 // Draws a full-screen graphic (from live.full) and the branded wipe (from
 // live.transition) on the 1920×1080 overlay canvas. All text goes in with
 // textContent; images are checked with validImage.
-import {mix, photoPosition, readable, shade, validImage} from './common.js';
+import {clockText, mix, photoPosition, readable, remaining, shade, validImage} from './common.js';
 import {wipeMs} from './transitions.js';
 
 function el(tag, className, text) {
@@ -78,6 +78,35 @@ function matchup(root, full, live) {
     root.append(box);
   });
   root.append(el('div', 'mVs', 'VS'));
+  if (full.clock) {
+    root.classList.add('withClock');
+    const box = el('div', 'mClock');
+    box.append(el('span', 'mClockLabel', full.clockLabel || ''), el('span', 'mClockTime', ''));
+    root.append(box);
+  }
+}
+
+// Runs a few times a second while a full-screen is up: the matchup clock
+// counts down to the start time, or shows the scorebug's game clock.
+export function updateFullClock(root, full, live, now) {
+  const time = root.querySelector('.mClockTime');
+  if (!time || !full?.clock) return;
+  let text;
+  let done = false;
+  if (full.clock === 'game') {
+    const game = live.games[live.sport];
+    text = clockText(remaining(game.game, now));
+  } else {
+    const ms = Math.max(0, (full.startAt || 0) - now);
+    done = ms === 0;
+    const seconds = Math.ceil(ms / 1000);
+    const h = Math.floor(seconds / 3600);
+    const m = Math.floor((seconds % 3600) / 60);
+    const s = String(seconds % 60).padStart(2, '0');
+    text = done ? 'Starting soon' : h ? `${h}:${String(m).padStart(2, '0')}:${s}` : `${m}:${s}`;
+  }
+  if (time.textContent !== text) time.textContent = text;
+  root.querySelector('.mClock').classList.toggle('done', done);
 }
 
 function lineup(root, full, live) {

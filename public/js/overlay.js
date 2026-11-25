@@ -5,7 +5,7 @@
 // separate OBS sources.
 import {byId, clamp, clockText, mix, photoPosition, readable, remaining, running, setTeamColors, setText, shade, validImage, esc} from './common.js';
 import {createTicker} from './ticker-layer.js';
-import {fitText, renderFull, renderWipe} from './full-layer.js';
+import {fitText, renderFull, renderWipe, updateFullClock} from './full-layer.js';
 import {coverAt, fullUp, wipeMs, wipeOver} from './transitions.js';
 
 const params = new URLSearchParams(location.search);
@@ -388,7 +388,12 @@ function paintFull() {
   renderFull(element, full, live);
   element.hidden = false;
   fitText(element);
+  updateFullClock(element, full, live, now());
 }
+setInterval(() => {
+  const element = byId('full');
+  if (live && !element.hidden) updateFullClock(element, previewMode ? previewFull : live.full, live, now());
+}, 200);
 
 // ── Wipes ───────────────────────────────────────────────────────────────────
 let wipeId = '';

@@ -36,6 +36,17 @@
 .mLogo{width:380px;height:380px;font-size:150px;margin-bottom:22px}
 .mName{font-size:96px;font-weight:800;text-transform:uppercase;line-height:1;white-space:nowrap;overflow:hidden;max-width:100%}
 .mRecord{font-size:44px;font-weight:600;opacity:.88;margin-top:8px;letter-spacing:.04em}
+.fs.matchup.withClock .mTeam{top:196px}
+.fs.matchup.withClock .mLogo{width:320px;height:320px}
+.fs.matchup.withClock .mVs{top:330px}
+.mClock{position:absolute;left:50%;transform:translateX(-50%);bottom:calc(var(--tk-lift,0px) + 112px);display:flex;flex-direction:column;align-items:center;min-width:440px;padding:12px 48px 10px;background:var(--dark);border:6px solid var(--studio);border-radius:18px;box-shadow:0 14px 40px #000b}
+.mClockLabel{font-size:32px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:var(--studio);line-height:1.1}
+.mClockTime{font-size:112px;font-weight:800;line-height:1;font-variant-numeric:tabular-nums;letter-spacing:.01em}
+.mClock.done .mClockLabel{display:none}
+.mClock.done .mClockTime{font-size:72px;text-transform:uppercase;padding:14px 0 10px}
+.fs.matchup .fsFoot{justify-content:center;padding:0 150px}
+.fs.matchup .fsFoot .fsSub{text-align:center}
+.fs.matchup .fsBrand{position:absolute;right:150px}
 .mVs{position:absolute;left:50%;top:410px;transform:translateX(-50%);width:190px;height:190px;border-radius:50%;background:var(--dark);border:7px solid var(--studio);display:grid;place-items:center;font-size:88px;font-weight:800;box-shadow:0 10px 40px #000a;padding-bottom:6px}
 
 /* ── Lineup ───────────────────────────────────────────────────────────────── */
